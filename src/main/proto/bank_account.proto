@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+package com.grpc.bankService;
+
+//option java_multiple_files = true;
+
+//import "google/protobuf/wrappers.proto";
+//import "google/protobuf/timestamp.proto";
+
+service BankAccountService {
+  rpc createBankAccount (CreateBankAccountRequest) returns (CreateBankAccountResponse);
+  rpc getBankAccountById (GetBankAccountByIdRequest) returns (GetBankAccountByIdResponse);
+  rpc depositBalance (DepositBalanceRequest) returns (DepositBalanceResponse);
+  rpc withdrawBalance (WithdrawBalanceRequest) returns (WithdrawBalanceResponse);
+  rpc getAllByBalance (GetAllByBalanceRequest) returns (stream GetAllByBalanceResponse);
+  rpc getAllByBalanceWithPagination(GetAllByBalanceWithPaginationRequest) returns (GetAllByBalanceWithPaginationResponse);
+}
+
+message BankAccountData {
+  string id = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string email = 4;
+  string address = 5;
+  string currency = 6;
+  string phone = 7;
+  double balance = 8;
+  string createdAt = 9;
+  string updatedAt = 10;
+}
+
+message CreateBankAccountRequest {
+  string email = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string address = 4;
+  string currency = 5;
+  string phone = 6;
+  double balance = 7;
+}
+
+message CreateBankAccountResponse {
+  BankAccountData bankAccount = 1;
+}
+
+message GetBankAccountByIdRequest {
+  string id = 1;
+}
+
+message GetBankAccountByIdResponse {
+  BankAccountData bankAccount = 1;
+}
+
+message DepositBalanceRequest {
+  string id = 1;
+  double balance = 2;
+}
+
+message DepositBalanceResponse {
+  BankAccountData bankAccount = 1;
+}
+
+message WithdrawBalanceRequest {
+  string id = 1;
+  double balance = 2;
+}
+
+message WithdrawBalanceResponse {
+  BankAccountData bankAccount = 1;
+}
+
+message GetAllByBalanceRequest {
+  double min = 1;
+  double max = 2;
+  int32 page = 3;
+  int32 size = 4;
+}
+
+message GetAllByBalanceResponse {
+  BankAccountData bankAccount = 1;
+}
+
+message GetAllByBalanceWithPaginationRequest {
+  double min = 1;
+  double max = 2;
+  int32 page = 3;
+  int32 size = 4;
+
+}
+
+message GetAllByBalanceWithPaginationResponse {
+  repeated BankAccountData bankAccount = 1;
+  int32 page = 2;
+  int32 size = 3;
+  int32 totalElements = 4;
+  int32 totalPages = 5;
+  bool isFirst = 6;
+  bool isLast = 7;
+}
