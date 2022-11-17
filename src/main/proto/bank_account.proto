@@ -2,7 +2,8 @@ syntax = "proto3";
 
 package com.grpc.bankService;
 
-//option java_multiple_files = true;
+option java_multiple_files = true;
+option java_outer_classname = "BankAccountGrpc";
 
 //import "google/protobuf/wrappers.proto";
 //import "google/protobuf/timestamp.proto";

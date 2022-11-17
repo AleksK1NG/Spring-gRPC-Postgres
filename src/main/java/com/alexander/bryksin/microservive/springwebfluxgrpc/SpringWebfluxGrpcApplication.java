@@ -1,7 +1,6 @@
 package com.alexander.bryksin.microservive.springwebfluxgrpc;
 
-import com.grpc.bankService.BankAccount;
-import com.grpc.bankService.ReactorBankAccountServiceGrpc;
+import com.grpc.bankService.*;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.boot.SpringApplication;
@@ -20,41 +19,53 @@ public class SpringWebfluxGrpcApplication {
 
 @GrpcService
 @Slf4j
-class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAccountServiceImplBase {
+class BankAccountService extends ReactorBankAccountServiceGrpc.BankAccountServiceImplBase {
     @Override
-    public Mono<BankAccount.CreateBankAccountResponse> createBankAccount(Mono<BankAccount.CreateBankAccountRequest> request) {
-        return request.map(req -> BankAccount.CreateBankAccountResponse.newBuilder()
-                .setBankAccount(BankAccount.BankAccountData.newBuilder()
-                        .setEmail(req.getEmail())
+    public Mono<CreateBankAccountResponse> createBankAccount(Mono<CreateBankAccountRequest> request) {
+        return request.map(req -> CreateBankAccountResponse.newBuilder()
+                        .setBankAccount(BankAccountData.newBuilder()
+                                .setEmail(req.getEmail())
+                                .setFirstName(req.getFirstName())
+                                .setLastName(req.getLastName())
+                                .setCurrency(req.getCurrency())
+                                .setBalance(req.getBalance())
+                                .build())
                         .build())
-                .build()).doOnSuccess(value -> log.info("success response: {}", value.toString()));
+                .doOnSuccess(result -> log.info("result: {}", result.toString()));
     }
 
     @Override
-    public Mono<BankAccount.GetBankAccountByIdResponse> getBankAccountById(Mono<BankAccount.GetBankAccountByIdRequest> request) {
+    public Mono<GetBankAccountByIdResponse> getBankAccountById(Mono<GetBankAccountByIdRequest> request) {
         return super.getBankAccountById(request);
     }
 
     @Override
-    public Mono<BankAccount.DepositBalanceResponse> depositBalance(Mono<BankAccount.DepositBalanceRequest> request) {
+    public Mono<DepositBalanceResponse> depositBalance(Mono<DepositBalanceRequest> request) {
         return super.depositBalance(request);
     }
 
     @Override
-    public Mono<BankAccount.WithdrawBalanceResponse> withdrawBalance(Mono<BankAccount.WithdrawBalanceRequest> request) {
+    public Mono<WithdrawBalanceResponse> withdrawBalance(Mono<WithdrawBalanceRequest> request) {
         return super.withdrawBalance(request);
     }
 
     @Override
-    public Flux<BankAccount.GetAllByBalanceResponse> getAllByBalance(Mono<BankAccount.GetAllByBalanceRequest> request) {
+    public Flux<GetAllByBalanceResponse> getAllByBalance(Mono<GetAllByBalanceRequest> request) {
         return super.getAllByBalance(request);
     }
 
     @Override
-    public Mono<BankAccount.GetAllByBalanceWithPaginationResponse> getAllByBalanceWithPagination(Mono<BankAccount.GetAllByBalanceWithPaginationRequest> request) {
+    public Mono<GetAllByBalanceWithPaginationResponse> getAllByBalanceWithPagination(Mono<GetAllByBalanceWithPaginationRequest> request) {
         return super.getAllByBalanceWithPagination(request);
     }
 }
+
+//
+//@GrpcService
+//@Slf4j
+//class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAccountServiceImplBase {
+//
+//}
 
 
 
