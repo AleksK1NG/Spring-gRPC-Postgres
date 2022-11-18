@@ -66,17 +66,8 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
     @Override
     public Mono<GetAllByBalanceWithPaginationResponse> getAllByBalanceWithPagination(Mono<GetAllByBalanceWithPaginationRequest> request) {
         return request.flatMap(req -> bankAccountService.findAllBankAccountsByBalance(BigDecimal.valueOf(req.getMin()), BigDecimal.valueOf(req.getMax()), PageRequest.of(req.getPage(), req.getSize())))
-                .map(page -> GetAllByBalanceWithPaginationResponse.newBuilder()
-                        .addAllBankAccount(page.get().map(BankAccountMapper::toGrpc).toList())
-                        .setTotalPages(page.getTotalPages())
-                        .setTotalElements(page.getNumberOfElements())
-                        .setSize(page.getSize())
-                        .setPage(page.getNumber())
-                        .setIsLast(page.isLast())
-                        .setIsFirst(page.isFirst())
-                        .build())
+                .map(BankAccountMapper::toPaginationGrpcResponse)
                 .subscribeOn(Schedulers.boundedElastic())
                 .doOnNext(response -> log.info("response: {}", response.toString()));
     }
-
 }
