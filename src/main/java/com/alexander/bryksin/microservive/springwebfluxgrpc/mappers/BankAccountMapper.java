@@ -3,6 +3,8 @@ package com.alexander.bryksin.microservive.springwebfluxgrpc.mappers;
 import com.alexander.bryksin.microservive.springwebfluxgrpc.domain.BankAccount;
 import com.grpc.bankService.BankAccountData;
 import com.grpc.bankService.CreateBankAccountRequest;
+import com.grpc.bankService.GetAllByBalanceWithPaginationResponse;
+import org.springframework.data.domain.Page;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -37,6 +39,18 @@ public final class BankAccountMapper {
                 .setPhone(bankAccount.getPhone())
                 .setCreatedAt(bankAccount.getCreatedAt().toString())
                 .setUpdatedAt(bankAccount.getUpdatedAt().toString())
+                .build();
+    }
+
+    public static GetAllByBalanceWithPaginationResponse toPaginationGrpcResponse(Page<BankAccount> page) {
+        return GetAllByBalanceWithPaginationResponse.newBuilder()
+                .addAllBankAccount(page.get().map(BankAccountMapper::toGrpc).toList())
+                .setTotalPages(page.getTotalPages())
+                .setTotalElements(page.getNumberOfElements())
+                .setSize(page.getSize())
+                .setPage(page.getNumber())
+                .setIsLast(page.isLast())
+                .setIsFirst(page.isFirst())
                 .build();
     }
 }
