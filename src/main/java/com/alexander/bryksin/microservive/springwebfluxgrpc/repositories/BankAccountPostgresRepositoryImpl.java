@@ -17,6 +17,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+import static com.alexander.bryksin.microservive.springwebfluxgrpc.domain.BankAccount.BALANCE;
+
 
 @Repository
 @RequiredArgsConstructor
@@ -28,7 +30,7 @@ public class BankAccountPostgresRepositoryImpl implements BankAccountPostgresRep
 
     @Override
     public Mono<Page<BankAccount>> findAllBankAccountsByBalance(BigDecimal min, BigDecimal max, Pageable pageable) {
-        var query = Query.query(Criteria.where("balance").between(min, max));
+        var query = Query.query(Criteria.where(BALANCE).between(min, max));
         Mono<List<BankAccount>> listMono = template.select(query, BankAccount.class).collectList();
 
         Mono<Map<String, Object>> totalCountMono = databaseClient.sql("SELECT count(bank_account_id) as total FROM microservices.bank_accounts WHERE balance BETWEEN :min AND :max")
