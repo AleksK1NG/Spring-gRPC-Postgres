@@ -1,6 +1,7 @@
 package com.alexander.bryksin.microservive.springwebfluxgrpc.services;
 
 import com.alexander.bryksin.microservive.springwebfluxgrpc.domain.BankAccount;
+import com.alexander.bryksin.microservive.springwebfluxgrpc.exceptions.BankAccountNotFoundException;
 import com.alexander.bryksin.microservive.springwebfluxgrpc.repositories.BankAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,23 +31,25 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     @Override
     public Mono<BankAccount> getBankAccountById(UUID id) {
-        return bankAccountRepository.findById(id);
+        return bankAccountRepository.findById(id)
+                .switchIfEmpty(Mono.error(new BankAccountNotFoundException(id.toString())))
+                .doOnError(RuntimeException.class, ex -> log.error("ex", ex));
     }
 
     @Override
     public Mono<BankAccount> depositAmount(UUID id, BigDecimal amount) {
-        return bankAccountRepository.findById(id).flatMap(bankAccount -> {
-            bankAccount.setBalance(bankAccount.getBalance().add(amount));
-            return bankAccountRepository.save(bankAccount);
-        }).doOnNext(bankAccount -> log.info("updated bank account: {}", bankAccount));
+        return bankAccountRepository.findById(id)
+                .switchIfEmpty(Mono.error(new BankAccountNotFoundException(id.toString())))
+                .flatMap(bankAccount -> bankAccountRepository.save(bankAccount.depositBalance(amount)))
+                .doOnNext(bankAccount -> log.info("updated bank account: {}", bankAccount));
     }
 
     @Override
     public Mono<BankAccount> withdrawAmount(UUID id, BigDecimal amount) {
-        return bankAccountRepository.findById(id).flatMap(bankAccount -> {
-            bankAccount.setBalance(bankAccount.getBalance().subtract(amount));
-            return bankAccountRepository.save(bankAccount);
-        }).doOnNext(bankAccount -> log.info("updated bank account: {}", bankAccount));
+        return bankAccountRepository.findById(id)
+                .switchIfEmpty(Mono.error(new BankAccountNotFoundException(id.toString())))
+                .flatMap(bankAccount -> bankAccountRepository.save(bankAccount.withdrawBalance(amount)))
+                .doOnNext(bankAccount -> log.info("updated bank account: {}", bankAccount));
     }
 
     @Override

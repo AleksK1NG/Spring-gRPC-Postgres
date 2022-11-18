@@ -1,6 +1,7 @@
 package com.alexander.bryksin.microservive.springwebfluxgrpc.domain;
 
 
+import com.alexander.bryksin.microservive.springwebfluxgrpc.exceptions.InvalidAmountException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -48,4 +49,19 @@ public class BankAccount {
 
     @Column("updated_at")
     private LocalDateTime updatedAt;
+
+
+    public BankAccount depositBalance(BigDecimal amount) {
+        if (amount.compareTo(BigDecimal.ZERO) < 0)
+            throw new InvalidAmountException(String.format("invalid amount %s for bank account: %s", amount, id));
+        balance = balance.add(amount);
+        return this;
+    }
+
+    public BankAccount withdrawBalance(BigDecimal amount) {
+        var currentBalance = balance.subtract(amount);
+        if (amount.compareTo(BigDecimal.ZERO) < 0 || currentBalance.compareTo(BigDecimal.ZERO) < 0)
+            throw new InvalidAmountException(String.format("invalid amount %s for bank account: %s", amount, id));
+        return this;
+    }
 }
