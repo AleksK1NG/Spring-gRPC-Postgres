@@ -9,6 +9,8 @@ import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @AllArgsConstructor
 @Builder
@@ -18,7 +20,7 @@ public class BankAccount {
 
     @Id
     @Column("bank_account_id")
-    private String id;
+    private UUID id;
 
     @Column("email")
     private String email;
@@ -42,8 +44,8 @@ public class BankAccount {
     private BigDecimal balance;
 
     @Column("created_at")
-    private BigDecimal createdAt;
+    private LocalDateTime createdAt;
 
     @Column("updated_at")
-    private BigDecimal updatedAt;
+    private LocalDateTime updatedAt;
 }
