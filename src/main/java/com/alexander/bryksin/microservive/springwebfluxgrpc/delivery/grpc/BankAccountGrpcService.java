@@ -12,6 +12,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.UUID;
 
 
@@ -21,37 +22,49 @@ import java.util.UUID;
 public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAccountServiceImplBase {
 
     private final BankAccountService bankAccountService;
+    private static final Long timeout = 5000L;
 
     @Override
     public Mono<CreateBankAccountResponse> createBankAccount(Mono<CreateBankAccountRequest> request) {
         return request.flatMap(req -> bankAccountService.createBankAccount(BankAccountMapper.of(req)))
+                .publishOn(Schedulers.boundedElastic())
                 .map(bankAccount -> CreateBankAccountResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build())
+                .timeout(Duration.ofMillis(timeout))
                 .doOnError(ex -> log.error("error save account", ex))
-                .doOnSuccess(result -> log.info("result: {}", result.toString()));
+                .doOnSuccess(result -> log.info("result: {}", result.toString()))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
     public Mono<GetBankAccountByIdResponse> getBankAccountById(Mono<GetBankAccountByIdRequest> request) {
         return request.flatMap(req -> bankAccountService.getBankAccountById(UUID.fromString(req.getId()))
+                        .publishOn(Schedulers.boundedElastic())
                         .doOnNext(bankAccount -> log.info("bank account: {}", bankAccount))
                         .doOnSuccess(result -> log.info("result: {}", result.toString()))
                         .doOnError(ex -> log.error("ex", ex))
                         .map(bankAccount -> GetBankAccountByIdResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build()))
+                .timeout(Duration.ofMillis(timeout))
                 .doOnSuccess(response -> log.info("response: {}", response.toString()));
     }
 
     @Override
     public Mono<DepositBalanceResponse> depositBalance(Mono<DepositBalanceRequest> request) {
         return request.flatMap(req -> bankAccountService.depositAmount(UUID.fromString(req.getId()), BigDecimal.valueOf(req.getBalance())))
+                .publishOn(Schedulers.boundedElastic())
                 .map(bankAccount -> DepositBalanceResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build())
-                .doOnSuccess(response -> log.info("response: {}", response.toString()));
+                .timeout(Duration.ofMillis(timeout))
+                .doOnSuccess(response -> log.info("response: {}", response.toString()))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
     public Mono<WithdrawBalanceResponse> withdrawBalance(Mono<WithdrawBalanceRequest> request) {
         return request.flatMap(req -> bankAccountService.withdrawAmount(UUID.fromString(req.getId()), BigDecimal.valueOf(req.getBalance())))
+                .publishOn(Schedulers.boundedElastic())
                 .map(bankAccount -> WithdrawBalanceResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build())
-                .doOnSuccess(response -> log.info("response: {}", response.toString()));
+                .timeout(Duration.ofMillis(timeout))
+                .doOnSuccess(response -> log.info("response: {}", response.toString()))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
@@ -60,14 +73,16 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
                 .publishOn(Schedulers.boundedElastic())
                 .flatMapMany(req -> bankAccountService.findBankAccountByBalanceBetween(BigDecimal.valueOf(req.getMin()), BigDecimal.valueOf(req.getMax()), PageRequest.of(req.getPage(), req.getSize())))
                 .map(bankAccount -> GetAllByBalanceResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build())
+                .timeout(Duration.ofMillis(timeout))
                 .doOnNext(response -> log.info("response: {}", response.getBankAccount()));
     }
 
     @Override
     public Mono<GetAllByBalanceWithPaginationResponse> getAllByBalanceWithPagination(Mono<GetAllByBalanceWithPaginationRequest> request) {
         return request.flatMap(req -> bankAccountService.findAllBankAccountsByBalance(BigDecimal.valueOf(req.getMin()), BigDecimal.valueOf(req.getMax()), PageRequest.of(req.getPage(), req.getSize())))
+                .publishOn(Schedulers.boundedElastic())
                 .map(BankAccountMapper::toPaginationGrpcResponse)
-                .subscribeOn(Schedulers.boundedElastic())
+                .timeout(Duration.ofMillis(timeout))
                 .doOnNext(response -> log.info("response: {}", response.toString()));
     }
 }
