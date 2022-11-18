@@ -4,6 +4,7 @@ import com.alexander.bryksin.microservive.springwebfluxgrpc.domain.BankAccount;
 import com.alexander.bryksin.microservive.springwebfluxgrpc.repositories.BankAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -51,5 +52,11 @@ public class BankAccountServiceImpl implements BankAccountService {
     @Override
     public Flux<BankAccount> findBankAccountByBalanceBetween(BigDecimal min, BigDecimal max, Pageable pageable) {
         return bankAccountRepository.findBankAccountByBalanceBetween(min, max, pageable);
+    }
+
+    @Override
+    public Mono<Page<BankAccount>> findAllBankAccountsByBalance(BigDecimal min, BigDecimal max, Pageable pageable) {
+        return bankAccountRepository.findAllBankAccountsByBalance(min, max, pageable)
+                .doOnSuccess(result -> log.info("result: {}", result.toString()));
     }
 }
