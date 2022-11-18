@@ -6,8 +6,10 @@ import com.grpc.bankService.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
+import org.springframework.data.domain.PageRequest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -54,7 +56,11 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
 
     @Override
     public Flux<GetAllByBalanceResponse> getAllByBalance(Mono<GetAllByBalanceRequest> request) {
-        return super.getAllByBalance(request);
+        return request
+                .publishOn(Schedulers.boundedElastic())
+                .flatMapMany(req -> bankAccountService.findBankAccountByBalanceBetween(BigDecimal.valueOf(req.getMin()), BigDecimal.valueOf(req.getMax()), PageRequest.of(req.getPage(), req.getSize())))
+                .map(bankAccount -> GetAllByBalanceResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build())
+                .doOnNext(response -> log.info("response: {}", response.getBankAccount()));
     }
 
     @Override
