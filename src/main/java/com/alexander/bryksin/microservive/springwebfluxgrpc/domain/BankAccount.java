@@ -20,34 +20,34 @@ import java.util.UUID;
 public class BankAccount {
 
     @Id
-    @Column("bank_account_id")
+    @Column(BANK_ACCOUNT_ID)
     private UUID id;
 
-    @Column("email")
+    @Column(EMAIL)
     private String email;
 
-    @Column("first_name")
+    @Column(FIRST_NAME)
     private String firstName;
 
-    @Column("last_name")
+    @Column(LAST_NAME)
     private String lastName;
 
-    @Column("address")
+    @Column(ADDRESS)
     private String address;
 
-    @Column("phone")
+    @Column(PHONE)
     private String phone;
 
-    @Column("currency")
+    @Column(CURRENCY)
     private String currency;
 
-    @Column("balance")
+    @Column(BALANCE)
     private BigDecimal balance;
 
-    @Column("created_at")
+    @Column(CREATED_AT)
     private LocalDateTime createdAt;
 
-    @Column("updated_at")
+    @Column(UPDATED_AT)
     private LocalDateTime updatedAt;
 
 
@@ -64,4 +64,16 @@ public class BankAccount {
             throw new InvalidAmountException(String.format("invalid amount %s for bank account: %s", amount, id));
         return this;
     }
+
+
+    public static final String BANK_ACCOUNT_ID = "bank_account_id";
+    public static final String EMAIL = "email";
+    public static final String FIRST_NAME = "first_name";
+    public static final String LAST_NAME = "last_name";
+    public static final String ADDRESS = "address";
+    public static final String PHONE = "phone";
+    public static final String CURRENCY = "currency";
+    public static final String BALANCE = "balance";
+    public static final String CREATED_AT = "created_at";
+    public static final String UPDATED_AT = "updated_at";
 }
