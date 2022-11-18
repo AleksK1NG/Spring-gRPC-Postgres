@@ -2,6 +2,7 @@ package com.alexander.bryksin.microservive.springwebfluxgrpc.services;
 
 
 import com.alexander.bryksin.microservive.springwebfluxgrpc.domain.BankAccount;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -19,4 +20,6 @@ public interface BankAccountService {
     Mono<BankAccount> withdrawAmount(UUID id, BigDecimal amount);
 
     Flux<BankAccount> findBankAccountByBalanceBetween(BigDecimal min, BigDecimal max, Pageable pageable);
+
+    Mono<Page<BankAccount>> findAllBankAccountsByBalance(BigDecimal min, BigDecimal max, Pageable pageable);
 }
