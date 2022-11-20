@@ -17,28 +17,35 @@ public class GrpcExceptionAdvice {
     @GrpcExceptionHandler(RuntimeException.class)
     public StatusException handleRuntimeException(RuntimeException ex) {
         var status = Status.INTERNAL.withDescription(ex.getLocalizedMessage()).withCause(ex);
-        log.error("(GrpcExceptionAdvice) ex: ", ex);
+        log.error("(GrpcExceptionAdvice) RuntimeException: ", ex);
         return status.asException();
     }
 
     @GrpcExceptionHandler(BankAccountNotFoundException.class)
     public StatusException handleBankAccountNotFoundException(BankAccountNotFoundException ex) {
         var status = Status.NOT_FOUND.withDescription(ex.getLocalizedMessage()).withCause(ex);
-        log.error("(GrpcExceptionAdvice) ex: ", ex);
+        log.error("(GrpcExceptionAdvice) BankAccountNotFoundException: ", ex);
         return status.asException();
     }
 
     @GrpcExceptionHandler(InvalidAmountException.class)
     public StatusException handleInvalidAmountException(InvalidAmountException ex) {
         var status = Status.INVALID_ARGUMENT.withDescription(ex.getLocalizedMessage()).withCause(ex);
-        log.error("(GrpcExceptionAdvice) ex: ", ex);
+        log.error("(GrpcExceptionAdvice) InvalidAmountException: ", ex);
         return status.asException();
     }
 
     @GrpcExceptionHandler(MethodArgumentNotValidException.class)
     public StatusException handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         var status = Status.INVALID_ARGUMENT.withDescription(ex.getLocalizedMessage()).withCause(ex);
-        log.error("(GrpcExceptionAdvice) ex: ", ex);
+        log.error("(GrpcExceptionAdvice) MethodArgumentNotValidException: ", ex);
+        return status.asException();
+    }
+
+    @GrpcExceptionHandler(IllegalArgumentException.class)
+    public StatusException handleIllegalArgumentException(IllegalArgumentException ex) {
+        var status = Status.INVALID_ARGUMENT.withDescription(ex.getLocalizedMessage()).withCause(ex);
+        log.error("(GrpcExceptionAdvice) IllegalArgumentException: ", ex);
         return status.asException();
     }
 }
