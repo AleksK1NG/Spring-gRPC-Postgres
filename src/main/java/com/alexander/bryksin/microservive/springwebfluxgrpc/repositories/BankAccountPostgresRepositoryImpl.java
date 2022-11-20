@@ -14,8 +14,6 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
 
 import static com.alexander.bryksin.microservive.springwebfluxgrpc.domain.BankAccount.BALANCE;
 
@@ -31,9 +29,9 @@ public class BankAccountPostgresRepositoryImpl implements BankAccountPostgresRep
     @Override
     public Mono<Page<BankAccount>> findAllBankAccountsByBalance(BigDecimal min, BigDecimal max, Pageable pageable) {
         var query = Query.query(Criteria.where(BALANCE).between(min, max));
-        Mono<List<BankAccount>> listMono = template.select(query, BankAccount.class).collectList();
+        var listMono = template.select(query, BankAccount.class).collectList();
 
-        Mono<Map<String, Object>> totalCountMono = databaseClient.sql("SELECT count(bank_account_id) as total FROM microservices.bank_accounts WHERE balance BETWEEN :min AND :max")
+        var totalCountMono = databaseClient.sql("SELECT count(bank_account_id) as total FROM microservices.bank_accounts WHERE balance BETWEEN :min AND :max")
                 .bind("min", min)
                 .bind("max", max)
                 .fetch()
