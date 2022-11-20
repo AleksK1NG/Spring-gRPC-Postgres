@@ -1,6 +1,9 @@
 package com.alexander.bryksin.microservive.springwebfluxgrpc.mappers;
 
 import com.alexander.bryksin.microservive.springwebfluxgrpc.domain.BankAccount;
+import com.alexander.bryksin.microservive.springwebfluxgrpc.domain.Currency;
+import com.alexander.bryksin.microservive.springwebfluxgrpc.dto.BankAccountSuccessResponseDto;
+import com.alexander.bryksin.microservive.springwebfluxgrpc.dto.CreateBankAccountDto;
 import com.grpc.bankService.BankAccountData;
 import com.grpc.bankService.CreateBankAccountRequest;
 import com.grpc.bankService.GetAllByBalanceWithPaginationResponse;
@@ -18,7 +21,7 @@ public final class BankAccountMapper {
                 .email(req.getEmail())
                 .firstName(req.getFirstName())
                 .lastName(req.getLastName())
-                .currency(req.getCurrency())
+                .currency(Currency.valueOf(req.getCurrency()))
                 .balance(BigDecimal.valueOf(req.getBalance()))
                 .phone(req.getPhone())
                 .address(req.getAddress())
@@ -34,7 +37,7 @@ public final class BankAccountMapper {
                 .setFirstName(bankAccount.getFirstName())
                 .setLastName(bankAccount.getLastName())
                 .setBalance(bankAccount.getBalance().doubleValue())
-                .setCurrency(bankAccount.getCurrency())
+                .setCurrency(bankAccount.getCurrency().name())
                 .setAddress(bankAccount.getAddress())
                 .setPhone(bankAccount.getPhone())
                 .setCreatedAt(bankAccount.getCreatedAt().toString())
@@ -51,6 +54,34 @@ public final class BankAccountMapper {
                 .setPage(page.getNumber())
                 .setIsLast(page.isLast())
                 .setIsFirst(page.isFirst())
+                .build();
+    }
+
+    public static BankAccountSuccessResponseDto toSuccessHttpResponse(BankAccount bankAccount) {
+        return new BankAccountSuccessResponseDto(
+                bankAccount.getId().toString(),
+                bankAccount.getEmail(),
+                bankAccount.getFirstName(),
+                bankAccount.getLastName(),
+                bankAccount.getAddress(),
+                bankAccount.getPhone(),
+                bankAccount.getCurrency(),
+                bankAccount.getBalance(),
+                bankAccount.getCreatedAt(),
+                bankAccount.getUpdatedAt());
+    }
+
+    public static BankAccount fromCreateBankAccountDto(CreateBankAccountDto createBankAccountDto) {
+        return BankAccount.builder()
+                .email(createBankAccountDto.email())
+                .firstName(createBankAccountDto.firstName())
+                .lastName(createBankAccountDto.lastName())
+                .currency(createBankAccountDto.currency())
+                .balance(createBankAccountDto.balance())
+                .phone(createBankAccountDto.phone())
+                .address(createBankAccountDto.address())
+                .updatedAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now())
                 .build();
     }
 }
