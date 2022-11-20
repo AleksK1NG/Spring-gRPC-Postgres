@@ -39,7 +39,7 @@ public class BankAccount {
     private String phone;
 
     @Column(CURRENCY)
-    private String currency;
+    private Currency currency;
 
     @Column(BALANCE)
     private BigDecimal balance;
