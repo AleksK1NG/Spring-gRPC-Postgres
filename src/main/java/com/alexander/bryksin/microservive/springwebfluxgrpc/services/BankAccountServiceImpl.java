@@ -23,7 +23,6 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     private final BankAccountRepository bankAccountRepository;
 
-
     @Override
     @Transactional
     public Mono<BankAccount> createBankAccount(BankAccount bankAccount) {

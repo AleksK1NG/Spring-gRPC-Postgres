@@ -31,5 +31,4 @@ build/
 
 ### VS Code ###
 .vscode/
-monitoring
 docker_data
