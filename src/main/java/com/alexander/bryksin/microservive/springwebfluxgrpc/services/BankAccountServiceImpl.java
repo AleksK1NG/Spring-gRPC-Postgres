@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -36,7 +37,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     public Mono<BankAccount> getBankAccountById(UUID id) {
         return bankAccountRepository.findById(id)
                 .switchIfEmpty(Mono.error(new BankAccountNotFoundException(id.toString())))
-                .doOnError(RuntimeException.class, ex -> log.error("ex", ex));
+                .publishOn(Schedulers.boundedElastic());
     }
 
     @Override
@@ -44,7 +45,8 @@ public class BankAccountServiceImpl implements BankAccountService {
     public Mono<BankAccount> depositAmount(UUID id, BigDecimal amount) {
         return bankAccountRepository.findById(id)
                 .switchIfEmpty(Mono.error(new BankAccountNotFoundException(id.toString())))
-                .flatMap(bankAccount -> bankAccountRepository.save(bankAccount.depositBalance(amount)))
+                .flatMap(bankAccount -> bankAccountRepository.save(bankAccount.depositBalance(amount))
+                        .publishOn(Schedulers.boundedElastic()))
                 .doOnNext(bankAccount -> log.info("updated bank account: {}", bankAccount));
     }
 
@@ -54,19 +56,21 @@ public class BankAccountServiceImpl implements BankAccountService {
         return bankAccountRepository.findById(id)
                 .switchIfEmpty(Mono.error(new BankAccountNotFoundException(id.toString())))
                 .flatMap(bankAccount -> bankAccountRepository.save(bankAccount.withdrawBalance(amount)))
+                .publishOn(Schedulers.boundedElastic())
                 .doOnNext(bankAccount -> log.info("updated bank account: {}", bankAccount));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Flux<BankAccount> findBankAccountByBalanceBetween(BigDecimal min, BigDecimal max, Pageable pageable) {
-        return bankAccountRepository.findBankAccountByBalanceBetween(min, max, pageable);
+        return bankAccountRepository.findBankAccountByBalanceBetween(min, max, pageable).publishOn(Schedulers.boundedElastic());
     }
 
     @Override
     @Transactional(readOnly = true)
     public Mono<Page<BankAccount>> findAllBankAccountsByBalance(BigDecimal min, BigDecimal max, Pageable pageable) {
         return bankAccountRepository.findAllBankAccountsByBalance(min, max, pageable)
+                .publishOn(Schedulers.boundedElastic())
                 .doOnSuccess(result -> log.info("result: {}", result.toString()));
     }
 }

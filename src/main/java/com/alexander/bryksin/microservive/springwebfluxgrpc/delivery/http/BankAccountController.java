@@ -31,6 +31,7 @@ import java.util.UUID;
 public class BankAccountController {
 
     private final BankAccountService bankAccountService;
+    private static final Long timeoutMillis = 5000L;
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
@@ -42,9 +43,9 @@ public class BankAccountController {
     public Mono<ResponseEntity<BankAccountSuccessResponseDto>> createBankAccount(@RequestBody CreateBankAccountDto createBankAccountDto) {
         return bankAccountService.createBankAccount(BankAccountMapper.fromCreateBankAccountDto(createBankAccountDto))
                 .map(bankAccount -> ResponseEntity.status(HttpStatus.CREATED).body(BankAccountMapper.toSuccessHttpResponse(bankAccount)))
-                .doOnSuccess(response -> log.info("created bank account: {}", response.getBody()))
-                .timeout(Duration.ofMillis(5000))
-                .subscribeOn(Schedulers.boundedElastic());
+                .publishOn(Schedulers.boundedElastic())
+                .timeout(Duration.ofMillis(timeoutMillis))
+                .doOnSuccess(response -> log.info("created bank account: {}", response.getBody()));
     }
 
     @GetMapping(path = "{id}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -57,9 +58,9 @@ public class BankAccountController {
     public Mono<ResponseEntity<BankAccountSuccessResponseDto>> getBankAccountById(@PathVariable String id) {
         return bankAccountService.getBankAccountById(UUID.fromString(id))
                 .map(bankAccount -> ResponseEntity.ok(BankAccountMapper.toSuccessHttpResponse(bankAccount)))
-                .doOnSuccess(response -> log.info("get bank account by id response: {}", response.getBody()))
-                .timeout(Duration.ofMillis(5000))
-                .subscribeOn(Schedulers.boundedElastic());
+                .publishOn(Schedulers.boundedElastic())
+                .timeout(Duration.ofMillis(timeoutMillis))
+                .doOnSuccess(response -> log.info("get bank account by id response: {}", response.getBody()));
     }
 
     @PutMapping(path = "/deposit/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -72,9 +73,9 @@ public class BankAccountController {
     public Mono<ResponseEntity<BankAccountSuccessResponseDto>> depositBalance(@RequestBody DepositBalanceDto depositBalanceDto, @PathVariable UUID id) {
         return bankAccountService.depositAmount(id, depositBalanceDto.amount())
                 .map(bankAccount -> ResponseEntity.ok(BankAccountMapper.toSuccessHttpResponse(bankAccount)))
-                .doOnSuccess(response -> log.info("response: {}", response.getBody()))
-                .timeout(Duration.ofMillis(5000))
-                .subscribeOn(Schedulers.boundedElastic());
+                .publishOn(Schedulers.boundedElastic())
+                .timeout(Duration.ofMillis(timeoutMillis))
+                .doOnSuccess(response -> log.info("response: {}", response.getBody()));
     }
 
     @PutMapping(path = "/withdraw/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -87,9 +88,9 @@ public class BankAccountController {
     public Mono<ResponseEntity<BankAccountSuccessResponseDto>> withdrawBalance(@RequestBody WithdrawBalanceDto withdrawBalanceDto, @PathVariable UUID id) {
         return bankAccountService.withdrawAmount(id, withdrawBalanceDto.amount())
                 .map(bankAccount -> ResponseEntity.ok(BankAccountMapper.toSuccessHttpResponse(bankAccount)))
-                .doOnSuccess(response -> log.info("response: {}", response.getBody()))
-                .timeout(Duration.ofMillis(5000))
-                .subscribeOn(Schedulers.boundedElastic());
+                .publishOn(Schedulers.boundedElastic())
+                .timeout(Duration.ofMillis(timeoutMillis))
+                .doOnSuccess(response -> log.info("response: {}", response.getBody()));
     }
 
     @GetMapping(path = "all/balance", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -106,9 +107,9 @@ public class BankAccountController {
             @RequestParam(name = "size", defaultValue = "10") int size) {
         return bankAccountService.findAllBankAccountsByBalance(min, max, PageRequest.of(page, size))
                 .map(bankAccount -> ResponseEntity.ok(bankAccount.map(BankAccountMapper::toSuccessHttpResponse)))
-                .doOnSuccess(response -> log.info("response: {}", response.getBody()))
-                .timeout(Duration.ofMillis(5000))
-                .subscribeOn(Schedulers.boundedElastic());
+                .publishOn(Schedulers.boundedElastic())
+                .timeout(Duration.ofMillis(timeoutMillis))
+                .doOnSuccess(response -> log.info("response: {}", response.getBody()));
     }
 
     @GetMapping(path = "all/balance/stream")
@@ -125,9 +126,9 @@ public class BankAccountController {
             @RequestParam(name = "size", defaultValue = "10") int size) {
         return bankAccountService.findBankAccountByBalanceBetween(min, max, PageRequest.of(page, size))
                 .map(BankAccountMapper::toSuccessHttpResponse)
-                .doOnNext(response -> log.info("response: {}", response))
-                .timeout(Duration.ofMillis(5000))
-                .subscribeOn(Schedulers.boundedElastic());
+                .publishOn(Schedulers.boundedElastic())
+                .timeout(Duration.ofMillis(timeoutMillis))
+                .doOnNext(response -> log.info("response: {}", response));
     }
 
 }
