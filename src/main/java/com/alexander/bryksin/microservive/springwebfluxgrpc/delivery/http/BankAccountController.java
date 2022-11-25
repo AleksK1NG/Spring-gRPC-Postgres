@@ -8,6 +8,8 @@ import com.alexander.bryksin.microservive.springwebfluxgrpc.dto.WithdrawBalanceD
 import com.alexander.bryksin.microservive.springwebfluxgrpc.mappers.BankAccountMapper;
 import com.alexander.bryksin.microservive.springwebfluxgrpc.services.BankAccountService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.Tags;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -28,6 +30,7 @@ import java.util.UUID;
 @RequestMapping(path = "/api/v1/bank")
 @Slf4j
 @RequiredArgsConstructor
+@Tags(@Tag(name = "Bank Accounts", description = "Bank Account REST Controller"))
 public class BankAccountController {
 
     private final BankAccountService bankAccountService;
@@ -38,8 +41,7 @@ public class BankAccountController {
             method = "createBankAccount",
             summary = "Create bew bank account",
             operationId = "createBankAccount",
-            description = "Create new bank for account for user"
-    )
+            description = "Create new bank for account for user")
     public Mono<ResponseEntity<BankAccountSuccessResponseDto>> createBankAccount(@RequestBody CreateBankAccountDto createBankAccountDto) {
         return bankAccountService.createBankAccount(BankAccountMapper.fromCreateBankAccountDto(createBankAccountDto))
                 .map(bankAccount -> ResponseEntity.status(HttpStatus.CREATED).body(BankAccountMapper.toSuccessHttpResponse(bankAccount)))
@@ -53,8 +55,7 @@ public class BankAccountController {
             method = "getBankAccountById",
             summary = "Get bank account by id",
             operationId = "getBankAccountById",
-            description = "Get user bank account by given id"
-    )
+            description = "Get user bank account by given id")
     public Mono<ResponseEntity<BankAccountSuccessResponseDto>> getBankAccountById(@PathVariable String id) {
         return bankAccountService.getBankAccountById(UUID.fromString(id))
                 .map(bankAccount -> ResponseEntity.ok(BankAccountMapper.toSuccessHttpResponse(bankAccount)))
@@ -68,8 +69,7 @@ public class BankAccountController {
             method = "depositBalance",
             summary = "Deposit balance",
             operationId = "depositBalance",
-            description = "Deposit given amount to the bank account balance"
-    )
+            description = "Deposit given amount to the bank account balance")
     public Mono<ResponseEntity<BankAccountSuccessResponseDto>> depositBalance(@RequestBody DepositBalanceDto depositBalanceDto, @PathVariable UUID id) {
         return bankAccountService.depositAmount(id, depositBalanceDto.amount())
                 .map(bankAccount -> ResponseEntity.ok(BankAccountMapper.toSuccessHttpResponse(bankAccount)))
@@ -83,8 +83,7 @@ public class BankAccountController {
             method = "withdrawBalance",
             summary = "Withdraw balance",
             operationId = "withdrawBalance",
-            description = "Withdraw given amount from the bank account balance"
-    )
+            description = "Withdraw given amount from the bank account balance")
     public Mono<ResponseEntity<BankAccountSuccessResponseDto>> withdrawBalance(@RequestBody WithdrawBalanceDto withdrawBalanceDto, @PathVariable UUID id) {
         return bankAccountService.withdrawAmount(id, withdrawBalanceDto.amount())
                 .map(bankAccount -> ResponseEntity.ok(BankAccountMapper.toSuccessHttpResponse(bankAccount)))
@@ -98,8 +97,7 @@ public class BankAccountController {
             method = "findAllAccountsByBalance",
             summary = "Find all bank account with given amount range",
             operationId = "findAllAccounts",
-            description = "Find all bank accounts for the given balance range with pagination"
-    )
+            description = "Find all bank accounts for the given balance range with pagination")
     public Mono<ResponseEntity<Page<BankAccountSuccessResponseDto>>> getByBalanceRange(
             @RequestParam(name = "min", defaultValue = "0") BigDecimal min,
             @RequestParam(name = "max", defaultValue = "500000000") BigDecimal max,
@@ -117,8 +115,7 @@ public class BankAccountController {
             method = "getAllByBalanceStream",
             summary = "Find all bank account with given amount range returns stream",
             operationId = "getAllByBalanceStream",
-            description = "Find all bank accounts for the given balance range"
-    )
+            description = "Find all bank accounts for the given balance range")
     public Flux<BankAccountSuccessResponseDto> getByBalanceRangeStream(
             @RequestParam(name = "min", defaultValue = "0") BigDecimal min,
             @RequestParam(name = "max", defaultValue = "500000000") BigDecimal max,
