@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.annotation.NewSpan;
+import org.springframework.cloud.sleuth.annotation.SpanTag;
 import org.springframework.cloud.sleuth.instrument.web.WebFluxSleuthOperators;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,7 +34,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     @Override
     @Transactional
     @NewSpan
-    public Mono<BankAccount> createBankAccount(BankAccount bankAccount) {
+    public Mono<BankAccount> createBankAccount(@SpanTag(key = "bankAccount") BankAccount bankAccount) {
         return bankAccountRepository.save(bankAccount)
                 .doOnEach(signal -> log.info("signal: {}", signal.get()))
                 .doOnSuccess(savedBankAccount -> log.info("saved bank account: {}", savedBankAccount));
@@ -42,7 +43,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     @Override
     @Transactional(readOnly = true)
     @NewSpan
-    public Mono<BankAccount> getBankAccountById(UUID id) {
+    public Mono<BankAccount> getBankAccountById(@SpanTag(key = "id") UUID id) {
         return bankAccountRepository.findById(id)
                 .switchIfEmpty(Mono.error(new BankAccountNotFoundException(id.toString())))
                 .doOnEach(v -> {
@@ -57,7 +58,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     @Override
     @Transactional
     @NewSpan
-    public Mono<BankAccount> depositAmount(UUID id, BigDecimal amount) {
+    public Mono<BankAccount> depositAmount(@SpanTag(key = "id") UUID id, @SpanTag(key = "amount") BigDecimal amount) {
         return bankAccountRepository.findById(id)
                 .switchIfEmpty(Mono.error(new BankAccountNotFoundException(id.toString())))
                 .flatMap(bankAccount -> bankAccountRepository.save(bankAccount.depositBalance(amount))
@@ -68,7 +69,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     @Override
     @Transactional
     @NewSpan
-    public Mono<BankAccount> withdrawAmount(UUID id, BigDecimal amount) {
+    public Mono<BankAccount> withdrawAmount(@SpanTag(key = "id") UUID id, @SpanTag(key = "amount") BigDecimal amount) {
         return bankAccountRepository.findById(id)
                 .switchIfEmpty(Mono.error(new BankAccountNotFoundException(id.toString())))
                 .flatMap(bankAccount -> bankAccountRepository.save(bankAccount.withdrawBalance(amount))
@@ -79,14 +80,14 @@ public class BankAccountServiceImpl implements BankAccountService {
     @Override
     @Transactional(readOnly = true)
     @NewSpan
-    public Flux<BankAccount> findBankAccountByBalanceBetween(BigDecimal min, BigDecimal max, Pageable pageable) {
+    public Flux<BankAccount> findBankAccountByBalanceBetween(@SpanTag(key = "min") BigDecimal min, @SpanTag(key = "max") BigDecimal max, @SpanTag(key = "pagination") Pageable pageable) {
         return bankAccountRepository.findBankAccountByBalanceBetween(min, max, pageable).publishOn(Schedulers.boundedElastic());
     }
 
     @Override
     @Transactional(readOnly = true)
     @NewSpan
-    public Mono<Page<BankAccount>> findAllBankAccountsByBalance(BigDecimal min, BigDecimal max, Pageable pageable) {
+    public Mono<Page<BankAccount>> findAllBankAccountsByBalance(@SpanTag(key = "min") BigDecimal min, @SpanTag(key = "max") BigDecimal max, @SpanTag(key = "pagination") Pageable pageable) {
         return bankAccountRepository.findAllBankAccountsByBalance(min, max, pageable)
                 .publishOn(Schedulers.boundedElastic())
                 .doOnSuccess(result -> log.info("result: {}", result.toString()));
