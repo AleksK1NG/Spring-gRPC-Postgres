@@ -9,6 +9,5 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public interface BankAccountRepository extends ReactiveSortingRepository<BankAccount, UUID>, BankAccountPostgresRepository {
-
     Flux<BankAccount> findBankAccountByBalanceBetween(BigDecimal min, BigDecimal max, Pageable pageable);
 }
