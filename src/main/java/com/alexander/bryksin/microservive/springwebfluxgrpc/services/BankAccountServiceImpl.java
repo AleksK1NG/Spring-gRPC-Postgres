@@ -37,7 +37,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     public Mono<BankAccount> getBankAccountById(UUID id) {
         return bankAccountRepository.findById(id)
                 .switchIfEmpty(Mono.error(new BankAccountNotFoundException(id.toString())))
-                .publishOn(Schedulers.boundedElastic());
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
@@ -55,8 +55,8 @@ public class BankAccountServiceImpl implements BankAccountService {
     public Mono<BankAccount> withdrawAmount(UUID id, BigDecimal amount) {
         return bankAccountRepository.findById(id)
                 .switchIfEmpty(Mono.error(new BankAccountNotFoundException(id.toString())))
-                .flatMap(bankAccount -> bankAccountRepository.save(bankAccount.withdrawBalance(amount)))
-                .publishOn(Schedulers.boundedElastic())
+                .flatMap(bankAccount -> bankAccountRepository.save(bankAccount.withdrawBalance(amount))
+                        .publishOn(Schedulers.boundedElastic()))
                 .doOnNext(bankAccount -> log.info("updated bank account: {}", bankAccount));
     }
 
