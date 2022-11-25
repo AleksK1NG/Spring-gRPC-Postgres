@@ -6,6 +6,7 @@ import com.grpc.bankService.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
+import org.springframework.cloud.sleuth.annotation.NewSpan;
 import org.springframework.data.domain.PageRequest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -25,6 +26,7 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
     private static final Long timeoutMillis = 5000L;
 
     @Override
+    @NewSpan
     public Mono<CreateBankAccountResponse> createBankAccount(Mono<CreateBankAccountRequest> request) {
         return request.flatMap(req -> bankAccountService.createBankAccount(BankAccountMapper.of(req)))
                 .publishOn(Schedulers.boundedElastic())
@@ -35,6 +37,7 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
     }
 
     @Override
+    @NewSpan
     public Mono<GetBankAccountByIdResponse> getBankAccountById(Mono<GetBankAccountByIdRequest> request) {
         return request.flatMap(req -> bankAccountService.getBankAccountById(UUID.fromString(req.getId()))
                         .publishOn(Schedulers.boundedElastic())
@@ -47,6 +50,7 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
     }
 
     @Override
+    @NewSpan
     public Mono<DepositBalanceResponse> depositBalance(Mono<DepositBalanceRequest> request) {
         return request
                 .flatMap(req -> bankAccountService.depositAmount(UUID.fromString(req.getId()), BigDecimal.valueOf(req.getBalance()))
@@ -57,6 +61,7 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
     }
 
     @Override
+    @NewSpan
     public Mono<WithdrawBalanceResponse> withdrawBalance(Mono<WithdrawBalanceRequest> request) {
         return request.flatMap(req -> bankAccountService.withdrawAmount(UUID.fromString(req.getId()), BigDecimal.valueOf(req.getBalance()))
                         .publishOn(Schedulers.boundedElastic())
@@ -66,6 +71,7 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
     }
 
     @Override
+    @NewSpan
     public Flux<GetAllByBalanceResponse> getAllByBalance(Mono<GetAllByBalanceRequest> request) {
         return request
                 .flatMapMany(req -> bankAccountService.findBankAccountByBalanceBetween(BigDecimal.valueOf(req.getMin()), BigDecimal.valueOf(req.getMax()), PageRequest.of(req.getPage(), req.getSize()))
@@ -76,6 +82,7 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
     }
 
     @Override
+    @NewSpan
     public Mono<GetAllByBalanceWithPaginationResponse> getAllByBalanceWithPagination(Mono<GetAllByBalanceWithPaginationRequest> request) {
         return request.flatMap(req -> bankAccountService.findAllBankAccountsByBalance(BigDecimal.valueOf(req.getMin()), BigDecimal.valueOf(req.getMax()), PageRequest.of(req.getPage(), req.getSize()))
                         .publishOn(Schedulers.boundedElastic())

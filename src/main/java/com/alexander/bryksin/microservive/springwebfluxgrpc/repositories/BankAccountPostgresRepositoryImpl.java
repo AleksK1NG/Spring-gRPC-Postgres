@@ -3,6 +3,7 @@ package com.alexander.bryksin.microservive.springwebfluxgrpc.repositories;
 import com.alexander.bryksin.microservive.springwebfluxgrpc.domain.BankAccount;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.sleuth.annotation.NewSpan;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +28,7 @@ public class BankAccountPostgresRepositoryImpl implements BankAccountPostgresRep
     private final R2dbcEntityTemplate template;
 
     @Override
+    @NewSpan
     public Mono<Page<BankAccount>> findAllBankAccountsByBalance(BigDecimal min, BigDecimal max, Pageable pageable) {
         var query = Query.query(Criteria.where(BALANCE).between(min, max));
         var listMono = template.select(query, BankAccount.class).collectList();
