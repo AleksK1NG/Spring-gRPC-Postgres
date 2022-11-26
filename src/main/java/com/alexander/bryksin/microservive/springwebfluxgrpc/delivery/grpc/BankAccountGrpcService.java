@@ -12,9 +12,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import javax.validation.ConstraintViolationException;
+import javax.validation.Validator;
 import java.math.BigDecimal;
 import java.time.Duration;
-import java.util.Optional;
 import java.util.UUID;
 
 
@@ -26,11 +27,12 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
     private final BankAccountService bankAccountService;
     private final Tracer tracer;
     private static final Long timeoutMillis = 5000L;
+    private final Validator validator;
 
     @Override
     @NewSpan
     public Mono<CreateBankAccountResponse> createBankAccount(Mono<CreateBankAccountRequest> request) {
-        return request.flatMap(req -> bankAccountService.createBankAccount(BankAccountMapper.of(req))
+        return request.flatMap(req -> bankAccountService.createBankAccount(validate(BankAccountMapper.of(req)))
                         .doOnEach(v -> spanTag("req", req.toString())))
                 .publishOn(Schedulers.boundedElastic())
                 .map(bankAccount -> CreateBankAccountResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build())
@@ -104,11 +106,19 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
                 .doOnNext(response -> log.info("response: {}", response.toString()));
     }
 
+    private <T> T validate(T data) {
+        var errors = validator.validate(data);
+        if (!errors.isEmpty()) throw new ConstraintViolationException(errors);
+        return data;
+    }
+
     private void spanTag(String key, String value) {
-        Optional.ofNullable(tracer.currentSpan()).ifPresent(span -> span.tag(key, value));
+        var span = tracer.currentSpan();
+        if (span != null) span.tag(key, value);
     }
 
     private void spanError(Throwable ex) {
-        Optional.ofNullable(tracer.currentSpan()).ifPresent(span -> span.error(ex));
+        var span = tracer.currentSpan();
+        if (span != null) span.error(ex);
     }
 }

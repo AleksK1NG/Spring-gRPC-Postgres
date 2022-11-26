@@ -15,6 +15,5 @@ public record BankAccountSuccessResponseDto(
         Currency currency,
         BigDecimal balance,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
-) {
+        LocalDateTime updatedAt) {
 }

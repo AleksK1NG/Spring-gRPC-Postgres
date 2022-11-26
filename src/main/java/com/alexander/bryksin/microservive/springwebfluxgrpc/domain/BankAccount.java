@@ -9,6 +9,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -24,24 +27,30 @@ public class BankAccount {
     private UUID id;
 
     @Column(EMAIL)
+    @Email
     private String email;
 
     @Column(FIRST_NAME)
+    @Size(min = 3, max = 60)
     private String firstName;
 
     @Column(LAST_NAME)
+    @Size(min = 3, max = 60)
     private String lastName;
 
     @Column(ADDRESS)
+    @Size(min = 3, max = 260)
     private String address;
 
     @Column(PHONE)
+    @Size(min = 6, max = 10)
     private String phone;
 
     @Column(CURRENCY)
     private Currency currency;
 
     @Column(BALANCE)
+    @DecimalMin(value = "0.0")
     private BigDecimal balance;
 
     @Column(CREATED_AT)

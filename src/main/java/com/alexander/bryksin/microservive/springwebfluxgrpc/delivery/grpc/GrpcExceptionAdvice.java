@@ -11,6 +11,8 @@ import net.devh.boot.grpc.server.advice.GrpcExceptionHandler;
 import org.springframework.dao.DataAccessException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
+import javax.validation.ConstraintViolationException;
+
 @GrpcAdvice
 @Slf4j
 public class GrpcExceptionAdvice {
@@ -40,6 +42,13 @@ public class GrpcExceptionAdvice {
     public StatusException handleDataAccessException(DataAccessException ex) {
         var status = Status.INVALID_ARGUMENT.withDescription(ex.getLocalizedMessage()).withCause(ex);
         log.error("(GrpcExceptionAdvice) DataAccessException: ", ex);
+        return status.asException();
+    }
+
+    @GrpcExceptionHandler(ConstraintViolationException.class)
+    public StatusException handleConstraintViolationException(ConstraintViolationException ex) {
+        var status = Status.INVALID_ARGUMENT.withDescription(ex.getLocalizedMessage()).withCause(ex);
+        log.error("(GrpcExceptionAdvice) ConstraintViolationException: ", ex);
         return status.asException();
     }
 

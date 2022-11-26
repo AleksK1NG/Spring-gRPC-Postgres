@@ -20,9 +20,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.time.Duration;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -42,7 +42,7 @@ public class BankAccountController {
             summary = "Create bew bank account",
             operationId = "createBankAccount",
             description = "Create new bank for account for user")
-    public Mono<ResponseEntity<BankAccountSuccessResponseDto>> createBankAccount(@RequestBody CreateBankAccountDto createBankAccountDto) {
+    public Mono<ResponseEntity<BankAccountSuccessResponseDto>> createBankAccount(@Valid @RequestBody CreateBankAccountDto createBankAccountDto) {
         return bankAccountService.createBankAccount(BankAccountMapper.fromCreateBankAccountDto(createBankAccountDto))
                 .doOnNext(bankAccount -> spanTag("bankAccount", bankAccount.toString()))
                 .map(bankAccount -> ResponseEntity.status(HttpStatus.CREATED).body(BankAccountMapper.toSuccessHttpResponse(bankAccount)))
@@ -74,7 +74,9 @@ public class BankAccountController {
             summary = "Deposit balance",
             operationId = "depositBalance",
             description = "Deposit given amount to the bank account balance")
-    public Mono<ResponseEntity<BankAccountSuccessResponseDto>> depositBalance(@RequestBody DepositBalanceDto depositBalanceDto, @PathVariable UUID id) {
+    public Mono<ResponseEntity<BankAccountSuccessResponseDto>> depositBalance(
+            @Valid @RequestBody DepositBalanceDto depositBalanceDto,
+            @PathVariable UUID id) {
         return bankAccountService.depositAmount(id, depositBalanceDto.amount())
                 .map(bankAccount -> ResponseEntity.ok(BankAccountMapper.toSuccessHttpResponse(bankAccount)))
                 .doOnNext(bankAccount -> spanTag("bankAccount", bankAccount.toString()))
@@ -90,7 +92,9 @@ public class BankAccountController {
             summary = "Withdraw balance",
             operationId = "withdrawBalance",
             description = "Withdraw given amount from the bank account balance")
-    public Mono<ResponseEntity<BankAccountSuccessResponseDto>> withdrawBalance(@RequestBody WithdrawBalanceDto withdrawBalanceDto, @PathVariable UUID id) {
+    public Mono<ResponseEntity<BankAccountSuccessResponseDto>> withdrawBalance(
+            @Valid @RequestBody WithdrawBalanceDto withdrawBalanceDto,
+            @PathVariable UUID id) {
         return bankAccountService.withdrawAmount(id, withdrawBalanceDto.amount())
                 .map(bankAccount -> ResponseEntity.ok(BankAccountMapper.toSuccessHttpResponse(bankAccount)))
                 .doOnNext(bankAccount -> spanTag("bankAccount", bankAccount.toString()))
@@ -142,19 +146,22 @@ public class BankAccountController {
 
 
     private void spanTag(String key, String value) {
-        Optional.ofNullable(tracer.currentSpan()).ifPresent(span -> span.tag(key, value));
+        var span = tracer.currentSpan();
+        if (span != null) span.tag(key, value);
     }
 
     private <T> ResponseEntity<T> spanTagResponseEntity(ResponseEntity<T> responseEntity) {
-        Optional.ofNullable(tracer.currentSpan()).ifPresent(span -> {
+        var span = tracer.currentSpan();
+        if (span != null) {
             span.tag("status", responseEntity.getStatusCode().toString());
             if (responseEntity.getBody() != null) span.tag("body", responseEntity.getBody().toString());
-        });
+        }
         return responseEntity;
     }
 
     private void spanError(Throwable ex) {
-        Optional.ofNullable(tracer.currentSpan()).ifPresent(span -> span.error(ex));
+        var span = tracer.currentSpan();
+        if (span != null) span.error(ex);
     }
 
     private String spanTagPageRequest(Page<?> response) {
