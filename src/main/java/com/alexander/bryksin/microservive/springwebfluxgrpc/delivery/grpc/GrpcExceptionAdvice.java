@@ -8,6 +8,7 @@ import io.grpc.StatusException;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.advice.GrpcAdvice;
 import net.devh.boot.grpc.server.advice.GrpcExceptionHandler;
+import org.springframework.dao.DataAccessException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 @GrpcAdvice
@@ -32,6 +33,13 @@ public class GrpcExceptionAdvice {
     public StatusException handleInvalidAmountException(InvalidAmountException ex) {
         var status = Status.INVALID_ARGUMENT.withDescription(ex.getLocalizedMessage()).withCause(ex);
         log.error("(GrpcExceptionAdvice) InvalidAmountException: ", ex);
+        return status.asException();
+    }
+
+    @GrpcExceptionHandler(DataAccessException.class)
+    public StatusException handleDataAccessException(DataAccessException ex) {
+        var status = Status.INVALID_ARGUMENT.withDescription(ex.getLocalizedMessage()).withCause(ex);
+        log.error("(GrpcExceptionAdvice) DataAccessException: ", ex);
         return status.asException();
     }
 

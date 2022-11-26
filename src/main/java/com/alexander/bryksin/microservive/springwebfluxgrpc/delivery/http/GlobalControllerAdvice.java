@@ -6,6 +6,7 @@ import com.alexander.bryksin.microservive.springwebfluxgrpc.exceptions.BankAccou
 import com.alexander.bryksin.microservive.springwebfluxgrpc.exceptions.InvalidAmountException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,15 @@ public class GlobalControllerAdvice {
         var errorHttpResponseDto = new ErrorHttpResponseDto(HttpStatus.NOT_FOUND.value(), ex.getLocalizedMessage(), LocalDateTime.now());
         log.error("(GlobalControllerAdvice) BankAccountNotFoundException", ex);
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(errorHttpResponseDto);
+    }
+
+    @ExceptionHandler(value = {DataAccessException.class})
+    public ResponseEntity<ErrorHttpResponseDto> handleDataAccessException(DataAccessException ex) {
+        var errorHttpResponseDto = new ErrorHttpResponseDto(HttpStatus.BAD_REQUEST.value(), ex.getLocalizedMessage(), LocalDateTime.now());
+        log.error("(GlobalControllerAdvice) DataAccessException", ex);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(errorHttpResponseDto);
     }
