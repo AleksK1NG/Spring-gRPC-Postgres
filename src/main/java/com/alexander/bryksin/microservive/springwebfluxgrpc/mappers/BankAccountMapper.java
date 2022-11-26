@@ -4,10 +4,10 @@ import com.alexander.bryksin.microservive.springwebfluxgrpc.domain.BankAccount;
 import com.alexander.bryksin.microservive.springwebfluxgrpc.domain.Currency;
 import com.alexander.bryksin.microservive.springwebfluxgrpc.dto.BankAccountSuccessResponseDto;
 import com.alexander.bryksin.microservive.springwebfluxgrpc.dto.CreateBankAccountDto;
-import com.grpc.bankService.BankAccountData;
-import com.grpc.bankService.CreateBankAccountRequest;
-import com.grpc.bankService.GetAllByBalanceWithPaginationResponse;
+import com.alexander.bryksin.microservive.springwebfluxgrpc.dto.FindByBalanceRequestDto;
+import com.grpc.bankService.*;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -83,5 +83,21 @@ public final class BankAccountMapper {
                 .updatedAt(LocalDateTime.now())
                 .createdAt(LocalDateTime.now())
                 .build();
+    }
+
+    public static FindByBalanceRequestDto findByBalanceRequestDtoFromGrpc(GetAllByBalanceRequest req) {
+        return new FindByBalanceRequestDto(
+                BigDecimal.valueOf(req.getMin()),
+                BigDecimal.valueOf(req.getMax()),
+                PageRequest.of(req.getPage(), req.getSize())
+        );
+    }
+
+    public static FindByBalanceRequestDto findByBalanceRequestDtoFromGrpc(GetAllByBalanceWithPaginationRequest req) {
+        return new FindByBalanceRequestDto(
+                BigDecimal.valueOf(req.getMin()),
+                BigDecimal.valueOf(req.getMax()),
+                PageRequest.of(req.getPage(), req.getSize())
+        );
     }
 }

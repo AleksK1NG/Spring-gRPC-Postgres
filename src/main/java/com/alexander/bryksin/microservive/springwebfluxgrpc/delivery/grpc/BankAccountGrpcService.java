@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.annotation.NewSpan;
-import org.springframework.data.domain.PageRequest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -36,7 +35,7 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
                 .publishOn(Schedulers.boundedElastic())
                 .map(bankAccount -> CreateBankAccountResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build())
                 .timeout(Duration.ofMillis(timeoutMillis))
-                .doOnError(ex -> log.error("error save account", ex))
+                .doOnError(this::spanError)
                 .doOnSuccess(result -> log.info("result: {}", result.toString()));
     }
 
@@ -46,11 +45,11 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
         return request.flatMap(req -> bankAccountService.getBankAccountById(UUID.fromString(req.getId()))
                         .doOnEach(v -> spanTag("id", req.getId()))
                         .publishOn(Schedulers.boundedElastic())
-                        .doOnNext(bankAccount -> log.info("bank account: {}", bankAccount))
-                        .doOnSuccess(result -> log.info("result: {}", result.toString()))
+                        .doOnSuccess(bankAccount -> spanTag("bankAccount", bankAccount.toString()))
                         .doOnError(ex -> log.error("getBankAccountById", ex))
                         .map(bankAccount -> GetBankAccountByIdResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build()))
                 .timeout(Duration.ofMillis(timeoutMillis))
+                .doOnError(this::spanError)
                 .doOnSuccess(response -> log.info("response: {}", response.toString()));
     }
 
@@ -64,6 +63,7 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
                         .map(bankAccount -> DepositBalanceResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build()))
                 .publishOn(Schedulers.boundedElastic())
                 .timeout(Duration.ofMillis(timeoutMillis))
+                .doOnError(this::spanError)
                 .doOnSuccess(response -> log.info("response: {}", response.toString()));
     }
 
@@ -75,6 +75,7 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
                         .doOnEach(v -> spanTag("req", req.toString()))
                         .map(bankAccount -> WithdrawBalanceResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build()))
                 .timeout(Duration.ofMillis(timeoutMillis))
+                .doOnError(this::spanError)
                 .doOnSuccess(response -> log.info("response: {}", response.toString()));
     }
 
@@ -82,26 +83,32 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
     @NewSpan
     public Flux<GetAllByBalanceResponse> getAllByBalance(Mono<GetAllByBalanceRequest> request) {
         return request
-                .flatMapMany(req -> bankAccountService.findBankAccountByBalanceBetween(BigDecimal.valueOf(req.getMin()), BigDecimal.valueOf(req.getMax()), PageRequest.of(req.getPage(), req.getSize()))
+                .flatMapMany(req -> bankAccountService.findBankAccountByBalanceBetween(BankAccountMapper.findByBalanceRequestDtoFromGrpc(req))
                         .publishOn(Schedulers.boundedElastic())
                         .doOnEach(v -> spanTag("req", req.toString()))
                         .map(bankAccount -> GetAllByBalanceResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build()))
                 .timeout(Duration.ofMillis(timeoutMillis))
+                .doOnError(this::spanError)
                 .doOnNext(response -> log.info("response: {}", response.getBankAccount()));
     }
 
     @Override
     @NewSpan
     public Mono<GetAllByBalanceWithPaginationResponse> getAllByBalanceWithPagination(Mono<GetAllByBalanceWithPaginationRequest> request) {
-        return request.flatMap(req -> bankAccountService.findAllBankAccountsByBalance(BigDecimal.valueOf(req.getMin()), BigDecimal.valueOf(req.getMax()), PageRequest.of(req.getPage(), req.getSize()))
+        return request.flatMap(req -> bankAccountService.findAllBankAccountsByBalance(BankAccountMapper.findByBalanceRequestDtoFromGrpc(req))
                         .publishOn(Schedulers.boundedElastic())
                         .doOnEach(v -> spanTag("req", req.toString()))
                         .map(BankAccountMapper::toPaginationGrpcResponse))
                 .timeout(Duration.ofMillis(timeoutMillis))
+                .doOnError(this::spanError)
                 .doOnNext(response -> log.info("response: {}", response.toString()));
     }
 
     private void spanTag(String key, String value) {
         Optional.ofNullable(tracer.currentSpan()).ifPresent(span -> span.tag(key, value));
+    }
+
+    private void spanError(Throwable ex) {
+        Optional.ofNullable(tracer.currentSpan()).ifPresent(span -> span.error(ex));
     }
 }
