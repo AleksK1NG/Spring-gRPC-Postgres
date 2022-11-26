@@ -7,6 +7,5 @@ import java.math.BigDecimal;
 public record FindByBalanceRequestDto(
         BigDecimal min,
         BigDecimal max,
-        Pageable pageable
-) {
+        Pageable pageable) {
 }
