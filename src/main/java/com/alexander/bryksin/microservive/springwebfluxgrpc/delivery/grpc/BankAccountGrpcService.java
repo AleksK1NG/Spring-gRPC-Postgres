@@ -26,17 +26,17 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
 
     private final BankAccountService bankAccountService;
     private final Tracer tracer;
-    private static final Long timeoutMillis = 5000L;
+    private static final Long TIMEOUT_MILLIS = 5000L;
     private final Validator validator;
 
     @Override
     @NewSpan
     public Mono<CreateBankAccountResponse> createBankAccount(Mono<CreateBankAccountRequest> request) {
         return request.flatMap(req -> bankAccountService.createBankAccount(validate(BankAccountMapper.of(req)))
-                        .doOnEach(v -> spanTag("req", req.toString())))
+                        .doOnNext(v -> spanTag("req", req.toString())))
                 .publishOn(Schedulers.boundedElastic())
                 .map(bankAccount -> CreateBankAccountResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build())
-                .timeout(Duration.ofMillis(timeoutMillis))
+                .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
                 .doOnSuccess(result -> log.info("result: {}", result.toString()));
     }
@@ -45,12 +45,11 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
     @NewSpan
     public Mono<GetBankAccountByIdResponse> getBankAccountById(Mono<GetBankAccountByIdRequest> request) {
         return request.flatMap(req -> bankAccountService.getBankAccountById(UUID.fromString(req.getId()))
-                        .doOnEach(v -> spanTag("id", req.getId()))
+                        .doOnNext(v -> spanTag("id", req.getId()))
                         .publishOn(Schedulers.boundedElastic())
                         .doOnSuccess(bankAccount -> spanTag("bankAccount", bankAccount.toString()))
-                        .doOnError(ex -> log.error("getBankAccountById", ex))
                         .map(bankAccount -> GetBankAccountByIdResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build()))
-                .timeout(Duration.ofMillis(timeoutMillis))
+                .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
                 .doOnSuccess(response -> log.info("response: {}", response.toString()));
     }
@@ -64,7 +63,7 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
                         .doOnEach(v -> spanTag("req", req.toString()))
                         .map(bankAccount -> DepositBalanceResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build()))
                 .publishOn(Schedulers.boundedElastic())
-                .timeout(Duration.ofMillis(timeoutMillis))
+                .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
                 .doOnSuccess(response -> log.info("response: {}", response.toString()));
     }
@@ -74,9 +73,9 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
     public Mono<WithdrawBalanceResponse> withdrawBalance(Mono<WithdrawBalanceRequest> request) {
         return request.flatMap(req -> bankAccountService.withdrawAmount(UUID.fromString(req.getId()), BigDecimal.valueOf(req.getBalance()))
                         .publishOn(Schedulers.boundedElastic())
-                        .doOnEach(v -> spanTag("req", req.toString()))
+                        .doOnNext(v -> spanTag("req", req.toString()))
                         .map(bankAccount -> WithdrawBalanceResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build()))
-                .timeout(Duration.ofMillis(timeoutMillis))
+                .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
                 .doOnSuccess(response -> log.info("response: {}", response.toString()));
     }
@@ -87,9 +86,9 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
         return request
                 .flatMapMany(req -> bankAccountService.findBankAccountByBalanceBetween(BankAccountMapper.findByBalanceRequestDtoFromGrpc(req))
                         .publishOn(Schedulers.boundedElastic())
-                        .doOnEach(v -> spanTag("req", req.toString()))
+                        .doOnNext(v -> spanTag("req", req.toString()))
                         .map(bankAccount -> GetAllByBalanceResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build()))
-                .timeout(Duration.ofMillis(timeoutMillis))
+                .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
                 .doOnNext(response -> log.info("response: {}", response.getBankAccount()));
     }
@@ -99,9 +98,9 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
     public Mono<GetAllByBalanceWithPaginationResponse> getAllByBalanceWithPagination(Mono<GetAllByBalanceWithPaginationRequest> request) {
         return request.flatMap(req -> bankAccountService.findAllBankAccountsByBalance(BankAccountMapper.findByBalanceRequestDtoFromGrpc(req))
                         .publishOn(Schedulers.boundedElastic())
-                        .doOnEach(v -> spanTag("req", req.toString()))
+                        .doOnNext(v -> spanTag("req", req.toString()))
                         .map(BankAccountMapper::toPaginationGrpcResponse))
-                .timeout(Duration.ofMillis(timeoutMillis))
+                .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
                 .doOnNext(response -> log.info("response: {}", response.toString()));
     }

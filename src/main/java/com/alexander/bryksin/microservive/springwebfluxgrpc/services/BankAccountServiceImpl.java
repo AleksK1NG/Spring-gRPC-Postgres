@@ -58,6 +58,7 @@ public class BankAccountServiceImpl implements BankAccountService {
                 .flatMap(bankAccount -> bankAccountRepository.save(bankAccount.depositBalance(amount))
                         .publishOn(Schedulers.boundedElastic()))
                 .doOnError(this::spanError)
+                .doOnNext(bankAccount -> spanTag("bankAccount", bankAccount.toString()))
                 .doOnSuccess(bankAccount -> log.info("updated bank account: {}", bankAccount));
     }
 
@@ -70,6 +71,7 @@ public class BankAccountServiceImpl implements BankAccountService {
                 .flatMap(bankAccount -> bankAccountRepository.save(bankAccount.withdrawBalance(amount))
                         .publishOn(Schedulers.boundedElastic()))
                 .doOnError(this::spanError)
+                .doOnNext(bankAccount -> spanTag("bankAccount", bankAccount.toString()))
                 .doOnSuccess(bankAccount -> log.info("updated bank account: {}", bankAccount));
     }
 
