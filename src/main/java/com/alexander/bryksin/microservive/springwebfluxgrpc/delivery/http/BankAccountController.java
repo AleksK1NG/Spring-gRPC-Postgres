@@ -33,7 +33,7 @@ import java.util.UUID;
 public class BankAccountController {
 
     private final BankAccountService bankAccountService;
-    private static final Long timeoutMillis = 5000L;
+    private static final Long TIMEOUT_MILLIS = 5000L;
     private final Tracer tracer;
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -47,7 +47,7 @@ public class BankAccountController {
                 .doOnNext(bankAccount -> spanTag("bankAccount", bankAccount.toString()))
                 .map(bankAccount -> ResponseEntity.status(HttpStatus.CREATED).body(BankAccountMapper.toSuccessHttpResponse(bankAccount)))
                 .publishOn(Schedulers.boundedElastic())
-                .timeout(Duration.ofMillis(timeoutMillis))
+                .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
                 .doOnSuccess(res -> log.info("response: status: {}, body: {}", spanTagResponseEntity(res).getStatusCodeValue(), res.getBody()));
     }
@@ -63,7 +63,7 @@ public class BankAccountController {
                 .doOnNext(bankAccount -> spanTag("bankAccount", bankAccount.toString()))
                 .map(bankAccount -> ResponseEntity.ok(BankAccountMapper.toSuccessHttpResponse(bankAccount)))
                 .publishOn(Schedulers.boundedElastic())
-                .timeout(Duration.ofMillis(timeoutMillis))
+                .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
                 .doOnSuccess(res -> log.info("response: status: {}, body: {}", spanTagResponseEntity(res).getStatusCodeValue(), res.getBody()));
     }
@@ -81,7 +81,7 @@ public class BankAccountController {
                 .map(bankAccount -> ResponseEntity.ok(BankAccountMapper.toSuccessHttpResponse(bankAccount)))
                 .doOnNext(bankAccount -> spanTag("bankAccount", bankAccount.toString()))
                 .publishOn(Schedulers.boundedElastic())
-                .timeout(Duration.ofMillis(timeoutMillis))
+                .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
                 .doOnSuccess(res -> log.info("response: status: {}, body: {}", spanTagResponseEntity(res).getStatusCodeValue(), res.getBody()));
     }
@@ -99,7 +99,7 @@ public class BankAccountController {
                 .map(bankAccount -> ResponseEntity.ok(BankAccountMapper.toSuccessHttpResponse(bankAccount)))
                 .doOnNext(bankAccount -> spanTag("bankAccount", bankAccount.toString()))
                 .publishOn(Schedulers.boundedElastic())
-                .timeout(Duration.ofMillis(timeoutMillis))
+                .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
                 .doOnSuccess(res -> log.info("response: status: {}, body: {}", spanTagResponseEntity(res).getStatusCodeValue(), res.getBody()));
     }
@@ -119,7 +119,7 @@ public class BankAccountController {
                 .doOnNext(result -> spanTag("result", spanTagPageRequest(result)))
                 .map(bankAccount -> ResponseEntity.ok(bankAccount.map(BankAccountMapper::toSuccessHttpResponse)))
                 .publishOn(Schedulers.boundedElastic())
-                .timeout(Duration.ofMillis(timeoutMillis))
+                .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
                 .doOnSuccess(res -> log.info("response: status: {}, body: {}", spanTagResponseEntity(res).getStatusCodeValue(), res.getBody()));
     }
@@ -139,7 +139,7 @@ public class BankAccountController {
         return bankAccountService.findBankAccountByBalanceBetween(new FindByBalanceRequestDto(min, max, PageRequest.of(page, size)))
                 .map(BankAccountMapper::toSuccessHttpResponse)
                 .publishOn(Schedulers.boundedElastic())
-                .timeout(Duration.ofMillis(timeoutMillis))
+                .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
                 .doOnNext(response -> log.info("response: {}", response));
     }
