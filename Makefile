@@ -31,8 +31,8 @@ logs-local:
 
 upload:
 	mvn clean package -Dmaven.test.skip
-	docker build -t alexanderbryksin/kotlin_spring_grpc_microservice:latest --platform=linux/arm64 -f ./Dockerfile .
-	docker push alexanderbryksin/kotlin_spring_grpc_microservice:latest
+	docker build -t alexanderbryksin/spring_webflux_grpc_microservice:latest --platform=linux/arm64 -f ./Dockerfile .
+	docker push alexanderbryksin/spring_webflux_grpc_microservice:latest
 
 
 k8s_apply:
