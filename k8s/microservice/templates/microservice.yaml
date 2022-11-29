@@ -1,0 +1,133 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.microservice.name }}
+  labels:
+    app: {{ .Values.microservice.name }}
+spec:
+  replicas: {{ .Values.microservice.replicas }}
+  template:
+    metadata:
+      name: {{ .Values.microservice.name }}
+      labels:
+        app: {{ .Values.microservice.name }}
+    spec:
+      containers:
+        - name: {{ .Values.microservice.name }}
+          image: {{ .Values.microservice.image }}
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: {{ .Values.microservice.resources.requests.memory }}
+              cpu: {{ .Values.microservice.resources.requests.cpu }}
+            limits:
+              memory: {{ .Values.microservice.resources.limits.memory }}
+              cpu: {{ .Values.microservice.resources.limits.cpu }}
+          livenessProbe:
+            httpGet:
+              port: {{ .Values.microservice.livenessProbe.httpGet.port }}
+              path: {{ .Values.microservice.livenessProbe.httpGet.path }}
+            initialDelaySeconds: {{ .Values.microservice.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.microservice.livenessProbe.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              port: {{ .Values.microservice.readinessProbe.httpGet.port }}
+              path: {{ .Values.microservice.readinessProbe.httpGet.path }}
+            initialDelaySeconds: {{ .Values.microservice.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.microservice.readinessProbe.periodSeconds }}
+          ports:
+            - containerPort: {{ .Values.microservice.ports.http.containerPort }}
+              name: {{ .Values.microservice.ports.http.name }}
+            - containerPort: {{ .Values.microservice.ports.grpc.containerPort}}
+              name: {{ .Values.microservice.ports.grpc.name }}
+          env:
+            - name: SPRING_APPLICATION_NAME
+              value: microservice_k8s
+            - name: JAVA_OPTS
+              value: "-XX:+UseG1GC -XX:MaxRAMPercentage=75"
+            - name: SERVER_PORT
+              valueFrom:
+                configMapKeyRef:
+                  key: server_port
+                  name: {{ .Values.microservice.name }}-config-map
+            - name: GRPC_SERVER_PORT
+              valueFrom:
+                configMapKeyRef:
+                  key: grpc_server_port
+                  name: {{ .Values.microservice.name }}-config-map
+            - name: SPRING_ZIPKIN_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: zipkin_base_url
+                  name: {{ .Values.microservice.name }}-config-map
+            - name: SPRING_R2DBC_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: r2dbc_url
+                  name: {{ .Values.microservice.name }}-config-map
+            - name: SPRING_FLYWAY_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: flyway_url
+                  name: {{ .Values.microservice.name }}-config-map
+      restartPolicy: Always
+      terminationGracePeriodSeconds: {{ .Values.microservice.terminationGracePeriodSeconds }}
+  selector:
+    matchLabels:
+      app: {{ .Values.microservice.name }}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.microservice.name }}-service
+  labels:
+    app: {{ .Values.microservice.name }}
+spec:
+  selector:
+    app: {{ .Values.microservice.name }}
+  ports:
+    - port: {{ .Values.microservice.service.httpPort }}
+      name: http
+      protocol: TCP
+      targetPort: http
+    - port: {{ .Values.microservice.service.grpcPort }}
+      name: grpc
+      protocol: TCP
+      targetPort: grpc
+  type: ClusterIP
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    release: monitoring
+  name: {{ .Values.microservice.name }}-service-monitor
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.microservice.name }}
+  endpoints:
+    - interval: 10s
+      port: http
+      path: /actuator/prometheus
+  namespaceSelector:
+    matchNames:
+      - default
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.microservice.name }}-config-map
+data:
+  server_port: "8080"
+  grpc_server_port: "8000"
+  zipkin_base_url: zipkin:9411
+  r2dbc_url: "r2dbc:postgresql://postgres:5432/bank_accounts"
+  flyway_url: "jdbc:postgresql://postgres:5432/bank_accounts"
