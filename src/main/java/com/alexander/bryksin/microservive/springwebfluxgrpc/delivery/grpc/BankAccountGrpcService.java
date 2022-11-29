@@ -38,7 +38,7 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
                 .map(bankAccount -> CreateBankAccountResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build())
                 .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
-                .doOnSuccess(result -> log.info("result: {}", result.toString()));
+                .doOnSuccess(result -> log.info("created account: {}", result.getBankAccount()));
     }
 
     @Override
@@ -51,7 +51,7 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
                         .map(bankAccount -> GetBankAccountByIdResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build()))
                 .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
-                .doOnSuccess(response -> log.info("response: {}", response.toString()));
+                .doOnSuccess(response -> log.info("bankAccount: {}", response.getBankAccount()));
     }
 
 
@@ -65,7 +65,7 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
                 .publishOn(Schedulers.boundedElastic())
                 .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
-                .doOnSuccess(response -> log.info("response: {}", response.toString()));
+                .doOnSuccess(response -> log.info("bankAccount: {}", response.getBankAccount()));
     }
 
     @Override
@@ -77,7 +77,7 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
                         .map(bankAccount -> WithdrawBalanceResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build()))
                 .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
-                .doOnSuccess(response -> log.info("response: {}", response.toString()));
+                .doOnSuccess(response -> log.info("bankAccount: {}", response.getBankAccount()));
     }
 
     @Override
@@ -90,7 +90,7 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
                         .map(bankAccount -> GetAllByBalanceResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build()))
                 .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
-                .doOnNext(response -> log.info("response: {}", response.getBankAccount()));
+                .doOnNext(response -> log.info("bankAccount: {}", response.getBankAccount()));
     }
 
     @Override
