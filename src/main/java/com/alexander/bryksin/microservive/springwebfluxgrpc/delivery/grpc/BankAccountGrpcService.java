@@ -10,7 +10,6 @@ import org.springframework.cloud.sleuth.Tracer;
 import org.springframework.cloud.sleuth.annotation.NewSpan;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
@@ -34,7 +33,6 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
     public Mono<CreateBankAccountResponse> createBankAccount(Mono<CreateBankAccountRequest> request) {
         return request.flatMap(req -> bankAccountService.createBankAccount(validate(BankAccountMapper.of(req)))
                         .doOnNext(v -> spanTag("req", req.toString())))
-                .publishOn(Schedulers.boundedElastic())
                 .map(bankAccount -> CreateBankAccountResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build())
                 .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
@@ -46,7 +44,6 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
     public Mono<GetBankAccountByIdResponse> getBankAccountById(Mono<GetBankAccountByIdRequest> request) {
         return request.flatMap(req -> bankAccountService.getBankAccountById(UUID.fromString(req.getId()))
                         .doOnNext(v -> spanTag("id", req.getId()))
-                        .publishOn(Schedulers.boundedElastic())
                         .doOnSuccess(bankAccount -> spanTag("bankAccount", bankAccount.toString()))
                         .map(bankAccount -> GetBankAccountByIdResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build()))
                 .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
@@ -62,7 +59,6 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
                 .flatMap(req -> bankAccountService.depositAmount(UUID.fromString(req.getId()), BigDecimal.valueOf(req.getBalance()))
                         .doOnEach(v -> spanTag("req", req.toString()))
                         .map(bankAccount -> DepositBalanceResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build()))
-                .publishOn(Schedulers.boundedElastic())
                 .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
                 .doOnSuccess(response -> log.info("bankAccount: {}", response.getBankAccount()));
@@ -72,7 +68,6 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
     @NewSpan
     public Mono<WithdrawBalanceResponse> withdrawBalance(Mono<WithdrawBalanceRequest> request) {
         return request.flatMap(req -> bankAccountService.withdrawAmount(UUID.fromString(req.getId()), BigDecimal.valueOf(req.getBalance()))
-                        .publishOn(Schedulers.boundedElastic())
                         .doOnNext(v -> spanTag("req", req.toString()))
                         .map(bankAccount -> WithdrawBalanceResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build()))
                 .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
@@ -85,7 +80,6 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
     public Flux<GetAllByBalanceResponse> getAllByBalance(Mono<GetAllByBalanceRequest> request) {
         return request
                 .flatMapMany(req -> bankAccountService.findBankAccountByBalanceBetween(BankAccountMapper.findByBalanceRequestDtoFromGrpc(req))
-                        .publishOn(Schedulers.boundedElastic())
                         .doOnNext(v -> spanTag("req", req.toString()))
                         .map(bankAccount -> GetAllByBalanceResponse.newBuilder().setBankAccount(BankAccountMapper.toGrpc(bankAccount)).build()))
                 .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
@@ -97,7 +91,6 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
     @NewSpan
     public Mono<GetAllByBalanceWithPaginationResponse> getAllByBalanceWithPagination(Mono<GetAllByBalanceWithPaginationRequest> request) {
         return request.flatMap(req -> bankAccountService.findAllBankAccountsByBalance(BankAccountMapper.findByBalanceRequestDtoFromGrpc(req))
-                        .publishOn(Schedulers.boundedElastic())
                         .doOnNext(v -> spanTag("req", req.toString()))
                         .map(BankAccountMapper::toPaginationGrpcResponse))
                 .timeout(Duration.ofMillis(TIMEOUT_MILLIS))

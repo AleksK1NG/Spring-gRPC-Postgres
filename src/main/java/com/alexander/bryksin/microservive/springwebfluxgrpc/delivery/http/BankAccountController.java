@@ -18,7 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import javax.validation.Valid;
 import java.math.BigDecimal;
@@ -46,7 +45,6 @@ public class BankAccountController {
         return bankAccountService.createBankAccount(BankAccountMapper.fromCreateBankAccountDto(createBankAccountDto))
                 .doOnNext(bankAccount -> spanTag("bankAccount", bankAccount.toString()))
                 .map(bankAccount -> ResponseEntity.status(HttpStatus.CREATED).body(BankAccountMapper.toSuccessHttpResponse(bankAccount)))
-                .publishOn(Schedulers.boundedElastic())
                 .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
                 .doOnSuccess(res -> log.info("response: status: {}, body: {}", spanTagResponseEntity(res).getStatusCodeValue(), res.getBody()));
@@ -62,7 +60,6 @@ public class BankAccountController {
         return bankAccountService.getBankAccountById(UUID.fromString(id))
                 .doOnNext(bankAccount -> spanTag("bankAccount", bankAccount.toString()))
                 .map(bankAccount -> ResponseEntity.ok(BankAccountMapper.toSuccessHttpResponse(bankAccount)))
-                .publishOn(Schedulers.boundedElastic())
                 .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
                 .doOnSuccess(res -> log.info("response: status: {}, body: {}", spanTagResponseEntity(res).getStatusCodeValue(), res.getBody()));
@@ -80,7 +77,6 @@ public class BankAccountController {
         return bankAccountService.depositAmount(id, depositBalanceDto.amount())
                 .map(bankAccount -> ResponseEntity.ok(BankAccountMapper.toSuccessHttpResponse(bankAccount)))
                 .doOnNext(bankAccount -> spanTag("bankAccount", bankAccount.toString()))
-                .publishOn(Schedulers.boundedElastic())
                 .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
                 .doOnSuccess(res -> log.info("response: status: {}, body: {}", spanTagResponseEntity(res).getStatusCodeValue(), res.getBody()));
@@ -98,7 +94,6 @@ public class BankAccountController {
         return bankAccountService.withdrawAmount(id, withdrawBalanceDto.amount())
                 .map(bankAccount -> ResponseEntity.ok(BankAccountMapper.toSuccessHttpResponse(bankAccount)))
                 .doOnNext(bankAccount -> spanTag("bankAccount", bankAccount.toString()))
-                .publishOn(Schedulers.boundedElastic())
                 .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
                 .doOnSuccess(res -> log.info("response: status: {}, body: {}", spanTagResponseEntity(res).getStatusCodeValue(), res.getBody()));
@@ -118,7 +113,6 @@ public class BankAccountController {
         return bankAccountService.findAllBankAccountsByBalance(new FindByBalanceRequestDto(min, max, PageRequest.of(page, size)))
                 .doOnNext(result -> spanTag("result", spanTagPageRequest(result)))
                 .map(bankAccount -> ResponseEntity.ok(bankAccount.map(BankAccountMapper::toSuccessHttpResponse)))
-                .publishOn(Schedulers.boundedElastic())
                 .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
                 .doOnSuccess(res -> log.info("response: status: {}, body: {}", spanTagResponseEntity(res).getStatusCodeValue(), res.getBody()));
@@ -138,7 +132,6 @@ public class BankAccountController {
             @RequestParam(name = "size", defaultValue = "10") int size) {
         return bankAccountService.findBankAccountByBalanceBetween(new FindByBalanceRequestDto(min, max, PageRequest.of(page, size)))
                 .map(BankAccountMapper::toSuccessHttpResponse)
-                .publishOn(Schedulers.boundedElastic())
                 .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
                 .doOnNext(response -> log.info("response: {}", response));
