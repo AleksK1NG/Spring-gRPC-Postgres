@@ -68,8 +68,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     public Mono<BankAccount> withdrawAmount(@SpanTag(key = "id") UUID id, @SpanTag(key = "amount") BigDecimal amount) {
         return bankAccountRepository.findById(id)
                 .switchIfEmpty(Mono.error(new BankAccountNotFoundException(id.toString())))
-                .flatMap(bankAccount -> bankAccountRepository.save(bankAccount.withdrawBalance(amount))
-                        .publishOn(Schedulers.boundedElastic()))
+                .flatMap(bankAccount -> bankAccountRepository.save(bankAccount.withdrawBalance(amount)))
                 .doOnError(this::spanError)
                 .doOnNext(bankAccount -> spanTag("bankAccount", bankAccount.toString()))
                 .doOnSuccess(bankAccount -> log.info("updated bank account: {}", bankAccount));

@@ -71,6 +71,7 @@ public class BankAccount {
         var currentBalance = balance.subtract(amount);
         if (amount.compareTo(BigDecimal.ZERO) < 0 || currentBalance.compareTo(BigDecimal.ZERO) < 0)
             throw new InvalidAmountException(String.format("invalid amount %s for bank account: %s", amount, id));
+        balance = balance.subtract(amount);
         return this;
     }
 

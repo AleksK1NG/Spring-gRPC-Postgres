@@ -37,7 +37,7 @@ public class BankAccountPostgresRepositoryImpl implements BankAccountPostgresRep
                                                                 @SpanTag(key = "id") BigDecimal max,
                                                                 @SpanTag(key = "id") Pageable pageable) {
 
-        var query = Query.query(Criteria.where(BALANCE).between(min, max));
+        var query = Query.query(Criteria.where(BALANCE).between(min, max)).with(pageable);
 
         var listMono = template.select(query, BankAccount.class).collectList()
                 .doOnError(this::spanError)
