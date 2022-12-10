@@ -36,7 +36,9 @@ public class BankAccountPostgresRepositoryImpl implements BankAccountPostgresRep
     public Mono<Page<BankAccount>> findAllBankAccountsByBalance(@SpanTag(key = "id") BigDecimal min,
                                                                 @SpanTag(key = "id") BigDecimal max,
                                                                 @SpanTag(key = "id") Pageable pageable) {
+
         var query = Query.query(Criteria.where(BALANCE).between(min, max));
+
         var listMono = template.select(query, BankAccount.class).collectList()
                 .doOnError(this::spanError)
                 .doOnSuccess(list -> spanTag("list", String.valueOf(list.size())));

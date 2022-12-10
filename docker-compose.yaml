@@ -19,7 +19,7 @@ services:
       - SPRING_R2DBC_URL=r2dbc:postgresql://host.docker.internal:5432/bank_accounts
       - SPRING_FLYWAY_URL=jdbc:postgresql://host.docker.internal:5432/bank_accounts
       - SPRING_REDIS_HOST=host.docker.internal
-      - JAVA_OPTS="-XX:+UseG1GC -XX:MaxRAMPercentage=75"
+      - JAVA_OPTS="-XX:+UseG1GC -Xmx6144m -Xms6144m -XX:MaxGCPauseMillis=500 -XX:ActiveProcessorCount=4"
     depends_on:
       - microservices_postgresql
       - prometheus
