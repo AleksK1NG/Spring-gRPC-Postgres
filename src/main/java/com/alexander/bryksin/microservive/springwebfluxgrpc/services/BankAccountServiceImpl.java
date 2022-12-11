@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -45,7 +44,6 @@ public class BankAccountServiceImpl implements BankAccountService {
         return bankAccountRepository.findById(id)
                 .doOnEach(v -> spanTag("id", id.toString()))
                 .switchIfEmpty(Mono.error(new BankAccountNotFoundException(id.toString())))
-                .subscribeOn(Schedulers.boundedElastic())
                 .doOnError(this::spanError);
     }
 
@@ -55,8 +53,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     public Mono<BankAccount> depositAmount(@SpanTag(key = "id") UUID id, @SpanTag(key = "amount") BigDecimal amount) {
         return bankAccountRepository.findById(id)
                 .switchIfEmpty(Mono.error(new BankAccountNotFoundException(id.toString())))
-                .flatMap(bankAccount -> bankAccountRepository.save(bankAccount.depositBalance(amount))
-                        .publishOn(Schedulers.boundedElastic()))
+                .flatMap(bankAccount -> bankAccountRepository.save(bankAccount.depositBalance(amount)))
                 .doOnError(this::spanError)
                 .doOnNext(bankAccount -> spanTag("bankAccount", bankAccount.toString()))
                 .doOnSuccess(bankAccount -> log.info("updated bank account: {}", bankAccount));
@@ -79,7 +76,6 @@ public class BankAccountServiceImpl implements BankAccountService {
     @NewSpan
     public Flux<BankAccount> findBankAccountByBalanceBetween(@SpanTag(key = "request") FindByBalanceRequestDto request) {
         return bankAccountRepository.findBankAccountByBalanceBetween(request.min(), request.max(), request.pageable())
-                .publishOn(Schedulers.boundedElastic())
                 .doOnError(this::spanError);
     }
 
@@ -88,7 +84,6 @@ public class BankAccountServiceImpl implements BankAccountService {
     @NewSpan
     public Mono<Page<BankAccount>> findAllBankAccountsByBalance(@SpanTag(key = "request") FindByBalanceRequestDto request) {
         return bankAccountRepository.findAllBankAccountsByBalance(request.min(), request.max(), request.pageable())
-                .publishOn(Schedulers.boundedElastic())
                 .doOnError(this::spanError)
                 .doOnSuccess(result -> log.info("result: {}", result.toString()));
     }

@@ -22,9 +22,9 @@ import java.util.Optional;
 import static com.alexander.bryksin.microservive.springwebfluxgrpc.domain.BankAccount.BALANCE;
 
 
+@Slf4j
 @Repository
 @RequiredArgsConstructor
-@Slf4j
 public class BankAccountPostgresRepositoryImpl implements BankAccountPostgresRepository {
 
     private final DatabaseClient databaseClient;
@@ -33,9 +33,9 @@ public class BankAccountPostgresRepositoryImpl implements BankAccountPostgresRep
 
     @Override
     @NewSpan
-    public Mono<Page<BankAccount>> findAllBankAccountsByBalance(@SpanTag(key = "id") BigDecimal min,
-                                                                @SpanTag(key = "id") BigDecimal max,
-                                                                @SpanTag(key = "id") Pageable pageable) {
+    public Mono<Page<BankAccount>> findAllBankAccountsByBalance(@SpanTag(key = "min") BigDecimal min,
+                                                                @SpanTag(key = "max") BigDecimal max,
+                                                                @SpanTag(key = "pageable") Pageable pageable) {
 
         var query = Query.query(Criteria.where(BALANCE).between(min, max)).with(pageable);
 
