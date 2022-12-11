@@ -32,15 +32,15 @@ import java.util.UUID;
 public class BankAccountController {
 
     private final BankAccountService bankAccountService;
-    private static final Long TIMEOUT_MILLIS = 5000L;
     private final Tracer tracer;
+    private static final Long TIMEOUT_MILLIS = 5000L;
 
-    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             method = "createBankAccount",
             summary = "Create bew bank account",
             operationId = "createBankAccount",
             description = "Create new bank for account for user")
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<ResponseEntity<BankAccountSuccessResponseDto>> createBankAccount(@Valid @RequestBody CreateBankAccountDto createBankAccountDto) {
         return bankAccountService.createBankAccount(BankAccountMapper.fromCreateBankAccountDto(createBankAccountDto))
                 .doOnNext(bankAccount -> spanTag("bankAccount", bankAccount.toString()))
@@ -50,12 +50,12 @@ public class BankAccountController {
                 .doOnSuccess(res -> log.info("response: status: {}, body: {}", spanTagResponseEntity(res).getStatusCodeValue(), res.getBody()));
     }
 
-    @GetMapping(path = "{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             method = "getBankAccountById",
             summary = "Get bank account by id",
             operationId = "getBankAccountById",
             description = "Get user bank account by given id")
+    @GetMapping(path = "{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<ResponseEntity<BankAccountSuccessResponseDto>> getBankAccountById(@PathVariable String id) {
         return bankAccountService.getBankAccountById(UUID.fromString(id))
                 .doOnNext(bankAccount -> spanTag("bankAccount", bankAccount.toString()))
@@ -65,12 +65,12 @@ public class BankAccountController {
                 .doOnSuccess(res -> log.info("response: status: {}, body: {}", spanTagResponseEntity(res).getStatusCodeValue(), res.getBody()));
     }
 
-    @PutMapping(path = "/deposit/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             method = "depositBalance",
             summary = "Deposit balance",
             operationId = "depositBalance",
             description = "Deposit given amount to the bank account balance")
+    @PutMapping(path = "/deposit/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<ResponseEntity<BankAccountSuccessResponseDto>> depositBalance(
             @Valid @RequestBody DepositBalanceDto depositBalanceDto,
             @PathVariable UUID id) {
@@ -82,12 +82,12 @@ public class BankAccountController {
                 .doOnSuccess(res -> log.info("response: status: {}, body: {}", spanTagResponseEntity(res).getStatusCodeValue(), res.getBody()));
     }
 
-    @PutMapping(path = "/withdraw/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             method = "withdrawBalance",
             summary = "Withdraw balance",
             operationId = "withdrawBalance",
             description = "Withdraw given amount from the bank account balance")
+    @PutMapping(path = "/withdraw/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<ResponseEntity<BankAccountSuccessResponseDto>> withdrawBalance(
             @Valid @RequestBody WithdrawBalanceDto withdrawBalanceDto,
             @PathVariable UUID id) {
@@ -99,12 +99,12 @@ public class BankAccountController {
                 .doOnSuccess(res -> log.info("response: status: {}, body: {}", spanTagResponseEntity(res).getStatusCodeValue(), res.getBody()));
     }
 
-    @GetMapping(path = "all/balance", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(
             method = "findAllAccountsByBalance",
             summary = "Find all bank account with given amount range",
             operationId = "findAllAccounts",
             description = "Find all bank accounts for the given balance range with pagination")
+    @GetMapping(path = "all/balance", produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<ResponseEntity<Page<BankAccountSuccessResponseDto>>> getByBalanceRange(
             @RequestParam(name = "min", defaultValue = "0") BigDecimal min,
             @RequestParam(name = "max", defaultValue = "500000000") BigDecimal max,
@@ -119,12 +119,12 @@ public class BankAccountController {
     }
 
 
-    @GetMapping(path = "all/balance/stream")
     @Operation(
             method = "getAllByBalanceStream",
             summary = "Find all bank account with given amount range returns stream",
             operationId = "getAllByBalanceStream",
             description = "Find all bank accounts for the given balance range")
+    @GetMapping(path = "all/balance/stream")
     public Flux<BankAccountSuccessResponseDto> getByBalanceRangeStream(
             @RequestParam(name = "min", defaultValue = "0") BigDecimal min,
             @RequestParam(name = "max", defaultValue = "500000000") BigDecimal max,

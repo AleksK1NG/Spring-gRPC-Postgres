@@ -1,5 +1,6 @@
 package com.alexander.bryksin.microservive.springwebfluxgrpc.delivery.grpc;
 
+import com.alexander.bryksin.microservive.springwebfluxgrpc.interceptors.LogGrpcInterceptor;
 import com.alexander.bryksin.microservive.springwebfluxgrpc.mappers.BankAccountMapper;
 import com.alexander.bryksin.microservive.springwebfluxgrpc.services.BankAccountService;
 import com.grpc.bankService.*;
@@ -18,15 +19,15 @@ import java.time.Duration;
 import java.util.UUID;
 
 
-@GrpcService
+@GrpcService(interceptors = {LogGrpcInterceptor.class})
 @Slf4j
 @RequiredArgsConstructor
 public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAccountServiceImplBase {
 
     private final BankAccountService bankAccountService;
     private final Tracer tracer;
-    private static final Long TIMEOUT_MILLIS = 5000L;
     private final Validator validator;
+    private static final Long TIMEOUT_MILLIS = 5000L;
 
     @Override
     @NewSpan
@@ -95,7 +96,7 @@ public class BankAccountGrpcService extends ReactorBankAccountServiceGrpc.BankAc
                         .map(BankAccountMapper::toPaginationGrpcResponse))
                 .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .doOnError(this::spanError)
-                .doOnNext(response -> log.info("response: {}", response.toString()));
+                .doOnSuccess(response -> log.info("response: {}", response.toString()));
     }
 
     private <T> T validate(T data) {
